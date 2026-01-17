@@ -70,31 +70,52 @@
         </div>
       </section>
 
-      <!-- Settings Panel (Side Panel) -->
+      <!-- Winner Modal -->
+      <div id="modal-winner" class="modal hidden">
+        <div class="modal-content winner-panel glass-panel">
+            <button class="close-icon absolute-top-right" id="btn-close-winner">&times;</button>
+            <div class="winner-decor"></div>
+            
+            <div class="winner-avatar-container" id="winner-avatar">
+                <!-- SVG Injected Here -->
+            </div>
+            
+            <div class="winner-header">
+                <span class="winner-label">🎉 Winner Selected 🎉</span>
+                <h1 class="winner-name" id="winner-name">Name Check</h1>
+            </div>
+
+            <div class="winner-prize" id="winner-prize"></div>
+
+            <div class="winner-details-grid" id="winner-details">
+                <!-- Details injected here -->
+            </div>
+        </div>
+      </div>
+      
+      <!-- Settings Side Panel -->
+      <div id="panel-overlay" class="panel-overlay hidden"></div>
       <div id="settings-panel" class="side-panel hidden-panel">
           <div class="panel-header">
               <h2>Settings</h2>
-              <button id="btn-close-settings" class="icon-btn">&times;</button>
+              <button class="close-icon" id="btn-close-settings">&times;</button>
           </div>
-          <div class="panel-content">
-              <div class="setting-group">
-                  <label>Mode</label>
-                  <div class="toggle-group">
-                      <button id="set-mode-random" class="toggle-btn active">Random</button>
-                      <button id="set-mode-weighted" class="toggle-btn">Weighted</button>
-                  </div>
-              </div>
-              
-              <div class="setting-group">
-                  <label for="anim-theme">Animation Theme</label>
-                  <select id="anim-theme" class="select-input">
-                      <option value="standard">Standard</option>
-                      <option value="suspenseful">Suspenseful</option>
-                      <option value="playful">Playful</option>
-                      <option value="dramatic">Dramatic</option>
-                      <option value="funny">Funny</option>
-                  </select>
-              </div>
+          
+          <div class="setting-group">
+              <label>Spin Duration: <span id="duration-value">15s</span></label>
+              <input type="range" id="spin-duration" min="5" max="60" value="15" step="1" class="range-input">
+          </div>
+
+          <div class="setting-group">
+              <label>Animation Theme</label>
+              <select id="anim-theme" class="select-input">
+                  <option value="standard">Standard</option>
+                  <option value="suspenseful">Suspenseful</option>
+                  <option value="playful">Playful</option>
+                  <option value="dramatic">Dramatic</option>
+                  <option value="funny">Funny</option>
+              </select>
+          </div>
 
                <div class="setting-group row">
                   <label for="toggle-remove-winner">Remove Winner After Spin</label>

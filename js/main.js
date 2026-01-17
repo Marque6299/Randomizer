@@ -110,6 +110,13 @@ class App {
              this.modalWinner.classList.add('hidden');
              this.startIdleSequence(); // Go back to idle
         });
+        
+        // Spin Duration Slider
+        const durationInput = document.getElementById('spin-duration');
+        const durationDisplay = document.getElementById('duration-value');
+        durationInput.addEventListener('input', (e) => {
+            durationDisplay.textContent = e.target.value + 's';
+        });
 
         // File Upload
         this.fileInput.addEventListener('change', (e) => this.handleFileUpload(e));
@@ -193,25 +200,39 @@ class App {
             </tr>
         `).join('');
         
-        // Expose global helpers for inline events (simple approach)
+        // Expose global helpers
         window.updateWeight = (id, val) => this.dataManager.updateWeight(id, val);
         window.removeParticipant = (id) => {
             this.dataManager.removeParticipant(id);
             this.updateParticipantsUI();
             this.startIdleSequence();
         }
+        
+        // History Edit Global
+        window.updateHistoryPrize = (index, val) => {
+            this.dataManager.updateHistoryPrize(index, val);
+        }
     }
     
     renderHistory() {
         const log = this.dataManager.getHistory();
-        this.historyListEl.innerHTML = log.map(en => `
+        this.historyListEl.innerHTML = log.map((en, index) => `
             <tr>
-                <td>${en.timestamp}</td>
-                <td><strong>${en.winner.name}</strong></td>
-                <td>${en.winner.uid || '-'}</td>
-                <td>${en.winner.shift || '-'}</td>
-                <td>${en.winner.supervisor || '-'}</td>
-                <td style="color: var(--accent-secondary); font-weight: bold">${en.prize}</td>
+                <td style="font-size: 0.8rem; color: #94a3b8;">${en.timestamp}</td>
+                <td>
+                    <div style="display: flex; flex-direction: column;">
+                        <span style="font-weight: 700; color: white;">${en.winner.name}</span>
+                        <span style="font-size: 0.75rem; color: #cbd5e1;">${en.winner.uid || ''} ${en.winner.shift ? `(${en.winner.shift})` : ''}</span>
+                    </div>
+                </td>
+                <td>
+                    <input type="text" 
+                        class="input-prize-edit"
+                        value="${en.prize}" 
+                        onchange="window.updateHistoryPrize(${index}, this.value)"
+                        placeholder="Add Prize"
+                    >
+                </td>
             </tr>
         `).join('');
     }
@@ -226,15 +247,11 @@ class App {
             return;
         }
         
-        // Create initial buffer for infinite scroll
-        // We need enough cards to cover screen + buffer
-        // Say 20 cards
         const buffer = [];
         for(let i=0; i<30; i++) {
              buffer.push(participants[i % participants.length]);
         }
         
-        // Initial render
         this.renderCardsToTrack(buffer, true);
         this.currentTrackData = buffer;
         
@@ -242,31 +259,6 @@ class App {
     }
     
     handleIdleLoop() {
-        // Called when a card exits the left screen
-        // In a real infinite DOM loop, we would remove the first child and append a new one
-        // To keep transformation smooth, we need to adjust translateX + itemSize
-        // But `AnimationEngine` logic handles raw translation.
-        
-        // Simplified approach for this tech stack:
-        // We won't mutate DOM constantly to avoid layout shifts syncing issues in this simple engine.
-        // Instead, valid approach: 
-        // Just let it scroll. When it gets VERY far (like 100 cards), reset?
-        // No, user wants INFINITE.
-        
-        // Correct Infinite DOM approach:
-        // 1. Remove first element.
-        // 2. Adjust Track Transform by +ItemSize (cancel out the movement).
-        // 3. Append new element to end.
-        
-        // Refinement:
-        // AnimationEngine controls transform. It notified us `onCardExit`.
-        // We:
-        // 1. Append a random participant to the end of track
-        // 2. Note: we are NOT removing from front to avoid coordinate jumping complex logic in Engine.
-        //    We will clean up only on Reset/Spin. 
-        //    (For a session < 1 hour, n_nodes won't kill browser).
-        
-        // actually, let's append!
          const participants = this.dataManager.getParticipants();
          if (!participants.length) return;
          
@@ -279,42 +271,30 @@ class App {
         const participants = this.dataManager.getParticipants();
         if (participants.length === 0) { alert("Add participants!"); return; }
         
-        // 1. Lock UI
         this.btnSpin.disabled = true;
         this.audioManager.playSpinStart();
         
-        // 2. Select Winner
         const winner = PickerLogic.selectWinner(participants, this.dataManager.mode);
         this.currentWinner = winner;
         
-        // 3. Prepare Track for Landing
-        // We are currently in IDLE.
-        // We need to append the "Winning Sequence" to the end of the current track.
-        // Logic:
-        // Count current children.
-        // The "Target Index" must be far enough to allow the spin duration.
-        // AnimationEngine.position is negative.
-        // Current Index = abs(pos) / itemSize.
-        // We want to land at Current Index + Displacment.
-        // Displacement for 6s at high speed ~ 100 cards?
-        // Let's safe bet: Append 60 cards, ensuring #60 is winner.
-        
         const currentCardCount = this.track.children.length;
-        const landingDistance = 60; // How many cards from NOW until winner
+        // Adjust landing distance based on duration? 
+        // 15s needs more cards than 5s.
+        // Approx 10 cards per second at max speed?
+        const duration = parseInt(document.getElementById('spin-duration').value) * 1000;
+        const landingDistance = Math.max(60, Math.floor(duration / 100)); // Dynamic distance
+        
         const targetIndex = currentCardCount + landingDistance; 
         
-        // Generate filler cards
         const fragment = document.createDocumentFragment();
         for(let i=0; i<landingDistance; i++) {
              const r = participants[Math.floor(Math.random() * participants.length)];
              fragment.appendChild(this.createCardElement(r));
         }
         
-        // Append Winner
-        const winEl = this.createCardElement(winner, true); // true for visual highlight
+        const winEl = this.createCardElement(winner, true); 
         fragment.appendChild(winEl);
         
-        // Append Buffer
         for(let i=0; i<10; i++) {
              const r = participants[Math.floor(Math.random() * participants.length)];
              fragment.appendChild(this.createCardElement(r));
@@ -322,55 +302,66 @@ class App {
         
         this.track.appendChild(fragment);
         
-        // 4. Execute Spin (Seamless)
-        // targetIndex is the index of the winner in the DOM
-        this.animationEngine.spinFromIdle(targetIndex + landingDistance, 6000, this.currentTheme);
-        // Note: targetIndex calculation above was `currentCardCount + landingDistance`.
-        // But `spinFromIdle` expects the *absolute* index.
-        // So targetIndex passed to engine should be `currentCardCount + landingDistance`.
-        
-        // Wait, loop above:
-        // we appended `landingDistance` items (0..59).
-        // Then winner.
-        // So winner is at `currentCardCount + landingDistance`.
-        // Correct.
-        this.animationEngine.spinFromIdle(currentCardCount + landingDistance, 6000, this.currentTheme);
+        this.animationEngine.spinFromIdle(currentCardCount + landingDistance, duration, this.currentTheme);
     }
     
     onSpinFinish() {
         this.audioManager.playWin();
-        
-        // Prize
         const prize = this.prizeInput.value.trim();
-        
-        // Log
         this.dataManager.logWin(this.currentWinner, prize);
         
-        // Remove Functionality
         if(this.dataManager.removeWinner) {
             this.dataManager.removeParticipant(this.currentWinner.id);
         }
         
-        this.showWinnerModal(prize);
-        this.btnSpin.disabled = false;
-        this.prizeInput.value = ""; // Reset
+        // DELAY: Wait 1.5s to show modal so user sees arrow verify
+        setTimeout(() => {
+            this.showWinnerModal(prize);
+            this.btnSpin.disabled = false;
+            this.prizeInput.value = "";
+        }, 1500);
     }
     
     showWinnerModal(prize) {
         this.winnerNameDisplay.textContent = this.currentWinner.name;
-        this.winnerPrizeDisplay.textContent = prize ? `Prize: ${prize}` : "";
+        this.winnerPrizeDisplay.textContent = prize ? `Prize: ${prize}` : "CONGRATULATIONS!";
         
-        // Details
+        const avatarContainer = document.getElementById('winner-avatar');
+        // Generate Avatar Again
+        const p = this.currentWinner;
+        const hash = p.name.split('').reduce((acc, char) => char.charCodeAt(0) + ((acc << 5) - acc), 0);
+        const hue = Math.abs(hash % 360);
+        const color = `hsl(${hue}, 70%, 65%)`;
+        avatarContainer.innerHTML = `
+            <div style="background: ${color}; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 50%; color: white;">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+            </div>
+        `;
+
         this.winnerDetailsDisplay.innerHTML = `
-            ${this.currentWinner.uid ? `<span class="detail-pill">ID: ${this.currentWinner.uid}</span>` : ''}
-            ${this.currentWinner.supervisor ? `<span class="detail-pill">Sup: ${this.currentWinner.supervisor}</span>` : ''}
-            ${this.currentWinner.shift ? `<span class="detail-pill">Shift: ${this.currentWinner.shift}</span>` : ''}
-            ${this.currentWinner.tag ? `<span class="detail-pill">${this.currentWinner.tag}</span>` : ''}
+            <div class="winner-detail-item">
+                <span class="label">ID Number</span>
+                <span class="value">${this.currentWinner.uid || 'N/A'}</span>
+            </div>
+            <div class="winner-detail-item">
+                <span class="label">Department/Shift</span>
+                <span class="value">${this.currentWinner.shift || 'N/A'}</span>
+            </div>
+            <div class="winner-detail-item">
+                <span class="label">Supervisor</span>
+                <span class="value">${this.currentWinner.supervisor || 'N/A'}</span>
+            </div>
+            <div class="winner-detail-item">
+                <span class="label">Role/Tag</span>
+                <span class="value">${this.currentWinner.tag || 'Participant'}</span>
+            </div>
         `;
         
         this.modalWinner.classList.remove('hidden');
         
-        // Fire confetti
         const container = document.getElementById('confetti-container');
         container.innerHTML = '';
         const colors = ['#6366f1', '#ec4899', '#06b6d4', '#f59e0b'];
@@ -513,7 +504,7 @@ class App {
         };
         closeBtn.addEventListener('click', close);
     }
-}
+};
 
 // Start App
 document.addEventListener('DOMContentLoaded', () => {

@@ -72,8 +72,14 @@ export class DataManager {
             _rawDate: now,
             timestamp: now.toLocaleString(),
             winner: winner, // Stores full object {name, uid, shift...}
-            prize: prize || "No Prize"
+            prize: prize || ""
         });
+    }
+
+    updateHistoryPrize(index, val) {
+        if(this.historyLog[index]) {
+            this.historyLog[index].prize = val;
+        }
     }
 
     /**
