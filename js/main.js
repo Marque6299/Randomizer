@@ -540,27 +540,39 @@ class App {
              const color = `hsl(${hue}, 70%, 65%)`;
 
              display.innerHTML = `
-                 <div class="slide-avatar" style="background: ${color}; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 4px solid white;">
+                 <div class="slide-avatar-large" style="background: ${color}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 60%; height: 60%; color: white;">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                         <circle cx="12" cy="7" r="4"></circle>
                     </svg>
                  </div>
-                 <div class="slide-name">${w.name}</div>
-                 <div class="slide-prize">${entry.prize || 'No Prize'}</div>
-                 <div class="slide-details">
-                    ${w.uid ? `<div class="slide-pill">${w.uid}</div>` : ''}
-                    ${w.supervisor ? `<div class="slide-pill">${w.supervisor}</div>` : ''}
-                    ${w.shift ? `<div class="slide-pill">${w.shift}</div>` : ''}
+                 <div class="slide-name-large">${w.name}</div>
+                 <div class="slide-prize-large">${entry.prize || 'No Prize'}</div>
+                 
+                 <div class="slide-meta-grid">
+                    <div class="slide-meta-item">
+                        <span class="slide-meta-label">ID Number</span>
+                        <span class="slide-meta-value">${w.uid || '-'}</span>
+                    </div>
+                    <div class="slide-meta-item">
+                        <span class="slide-meta-label">Department</span>
+                        <span class="slide-meta-value">${w.shift || '-'}</span>
+                    </div>
+                    <div class="slide-meta-item">
+                        <span class="slide-meta-label">Supervisor</span>
+                        <span class="slide-meta-value">${w.supervisor || '-'}</span>
+                    </div>
+                     <div class="slide-meta-item">
+                        <span class="slide-meta-label">Role</span>
+                        <span class="slide-meta-value">${w.tag || '-'}</span>
+                    </div>
                  </div>
              `;
              
              // Trigger re-flow for animation
              display.classList.remove('animate');
-             void display.offsetWidth;
-             display.style.animation = 'none';
-             display.offsetHeight; /* trigger reflow */
-             display.style.animation = 'slideUp 0.5s ease-out';
+             void display.offsetWidth; // Force Reflow
+             display.classList.add('animate');
              
              index++;
         };
