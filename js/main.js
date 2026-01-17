@@ -120,11 +120,14 @@ class App {
 
         // App Title Input
         const titleInput = document.getElementById('app-title-input');
-        titleInput.addEventListener('input', (e) => {
-            const val = e.target.value;
-            document.querySelector('.navbar-brand').textContent = val || 'Premium Random Picker';
-            document.title = val || 'Premium Random Picker';
-        });
+        const mainTitle = document.getElementById('main-title'); // Main H1
+        const updateTitle = (val) => {
+            const t = val || 'Premium Random Picker';
+            document.querySelector('.navbar-brand').textContent = t;
+            mainTitle.textContent = t;
+            document.title = t;
+        };
+        titleInput.addEventListener('input', (e) => updateTitle(e.target.value));
 
         // File Upload
         this.fileInput.addEventListener('change', (e) => this.handleFileUpload(e));
