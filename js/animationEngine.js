@@ -132,7 +132,7 @@ export class AnimationEngine {
                     ease = 1 - Math.pow(1 - progress, 3);
             }
             
-            const currentPos = startPos + (finalTarget - startPos) * ease;
+            const currentPos = startPos + (this.targetPosition - startPos) * ease;
             
             this.track.style.transform = `translateX(${currentPos}px)`;
             
