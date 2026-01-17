@@ -138,11 +138,28 @@ body {
 .app-container {
   flex: 1;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   position: relative;
   background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
   overflow: hidden;
+  gap: 1rem;
+}
+
+/* App Display Title */
+.app-display-title {
+    font-size: 3.5rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    background: linear-gradient(to right, #fff, #94a3b8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    margin: 0;
+    text-align: center;
+    z-index: 10;
 }
 
 /* Picker Display */
@@ -153,20 +170,7 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 2rem;
-  padding: 2rem;
-}
-
-.app-display-title {
-    font-size: 3rem;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    background: linear-gradient(to right, #fff, #94a3b8);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    margin-bottom: 1rem;
-    text-align: center;
+  padding: 1rem;
 }
 
 .controls-container {

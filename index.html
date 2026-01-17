@@ -51,9 +51,10 @@
 
     <!-- Main Content Area -->
     <main class="app-container">
+      <h1 id="app-title-display" class="app-display-title">Premium Random Picker</h1>
+      
       <!-- Picker Section -->
       <section id="picker-section" class="picker-display">
-        <h1 id="app-title-display" class="app-display-title">Premium Random Picker</h1>
         <div class="picker-window">
           <div class="picker-track" id="picker-track">
             <!-- Cards are injected here by JS -->
@@ -64,6 +65,13 @@
         </div>
 
         <div class="controls-area">
+          <div class="input-wrapper">
+             <input type="text" id="prize-input" class="prize-input" placeholder="Enter Prize (Optional)" />
+          </div>
+          <button id="btn-spin" class="cta-button">SPIN</button>
+          <div id="status-indicator" class="status-text">Ready to Pick</div>
+        </div>
+      </section>
           <div class="input-wrapper">
              <input type="text" id="prize-input" class="prize-input" placeholder="Enter Prize (Optional)" />
           </div>
