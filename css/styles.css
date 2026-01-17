@@ -149,27 +149,13 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center; /* Center vertical */
+  justify-content: flex-start; /* Moved from center to start */
+  padding-top: 4rem; /* Push down slightly from header */
   align-items: center;
   position: relative;
   background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
   overflow: hidden;
   /* Removed gap, let picker center itself */
-}
-
-/* App Display Title */
-.app-display-title {
-    font-size: 3.5rem;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    background: linear-gradient(to right, #fff, #94a3b8);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    margin: 0;
-    text-align: center;
-    z-index: 10;
 }
 
 /* Picker Display */
@@ -203,7 +189,7 @@ body {
 
 .picker-window {
   width: 100%;
-  height: 250px;
+  height: 350px; /* Increased from 250px */
   position: relative;
   overflow: hidden;
   /* Mask/fade edges */
@@ -230,7 +216,7 @@ body {
 /* Card Styles */
 .picker-card {
   min-width: var(--card-width);
-  height: 220px; /* Increased height for premium layout */
+  height: 280px; /* Increased height from 220px */
   background: linear-gradient(
     180deg,
     rgba(30, 41, 59, 0.95),
