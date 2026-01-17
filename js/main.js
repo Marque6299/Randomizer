@@ -216,25 +216,46 @@ class App {
     
     renderHistory() {
         const log = this.dataManager.getHistory();
-        this.historyListEl.innerHTML = log.map((en, index) => `
-            <tr>
-                <td style="font-size: 0.8rem; color: #94a3b8;">${en.timestamp}</td>
-                <td>
-                    <div style="display: flex; flex-direction: column;">
-                        <span style="font-weight: 700; color: white;">${en.winner.name}</span>
-                        <span style="font-size: 0.75rem; color: #cbd5e1;">${en.winner.uid || ''} ${en.winner.shift ? `(${en.winner.shift})` : ''}</span>
+        
+        // Generate Premium List HTML
+        const listHtml = log.map((en, index) => {
+            const w = en.winner;
+            const hash = w.name.split('').reduce((acc, char) => char.charCodeAt(0) + ((acc << 5) - acc), 0);
+            const hue = Math.abs(hash % 360);
+            const color = `hsl(${hue}, 70%, 65%)`;
+
+            return `
+            <div class="history-card-item">
+                <div class="h-avatar" style="background: ${color}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </div>
+                <div class="h-info">
+                    <div class="h-time">${en.timestamp}</div>
+                    <div class="h-name">${w.name}</div>
+                    <div class="h-details">
+                        ${w.uid ? `<span>ID: ${w.uid}</span>` : ''}
+                        ${w.shift ? `<span>• ${w.shift}</span>` : ''}
                     </div>
-                </td>
-                <td>
-                    <input type="text" 
+                </div>
+                <div class="h-prize">
+                     <span class="prize-icon">🏆</span>
+                     <input type="text" 
                         class="input-prize-edit"
                         value="${en.prize}" 
                         onchange="window.updateHistoryPrize(${index}, this.value)"
                         placeholder="Add Prize"
                     >
-                </td>
-            </tr>
-        `).join('');
+                </div>
+            </div>
+            `;
+        }).join('');
+        
+        // Inject into container - NOTE: checking if we need to replace TABLE with DIV structure in HTML
+        // For minimal HTML change, we will inject this into the .modal-body's container, replacing the table.
+        const container = document.querySelector('#modal-history .table-container');
+        if(container) {
+            container.innerHTML = `<div class="history-list-grid">${listHtml}</div>`;
+        }
     }
 
     // Animation Logic
@@ -302,6 +323,21 @@ class App {
         
         this.track.appendChild(fragment);
         
+        // Add Visual Helper (Debug Line) if not exists
+        if(!document.getElementById('debug-line')) {
+            const line = document.createElement('div');
+            line.id = 'debug-line';
+            line.style.position = 'absolute';
+            line.style.left = '50%';
+            line.style.top = '0';
+            line.style.bottom = '0';
+            line.style.width = '2px';
+            line.style.background = 'rgba(255, 0, 0, 0.5)';
+            line.style.zIndex = '100';
+            line.style.pointerEvents = 'none';
+            document.querySelector('.picker-window').appendChild(line);
+        }
+        
         this.animationEngine.spinFromIdle(currentCardCount + landingDistance, duration, this.currentTheme);
     }
     
@@ -314,12 +350,13 @@ class App {
             this.dataManager.removeParticipant(this.currentWinner.id);
         }
         
-        // DELAY: Wait 1.5s to show modal so user sees arrow verify
+        // DELAY: Wait 2.0s to show modal so user sees arrow verify
         setTimeout(() => {
+            if(document.getElementById('debug-line')) document.getElementById('debug-line').remove();
             this.showWinnerModal(prize);
             this.btnSpin.disabled = false;
             this.prizeInput.value = "";
-        }, 1500);
+        }, 2000);
     }
     
     showWinnerModal(prize) {
