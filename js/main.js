@@ -230,7 +230,11 @@ class App {
                 <td>
                     <div style="display: flex; flex-direction: column;">
                         <span style="font-weight: 700; color: white;">${en.winner.name}</span>
-                        <span style="font-size: 0.75rem; color: #cbd5e1;">${en.winner.uid || ''} ${en.winner.shift ? `(${en.winner.shift})` : ''}</span>
+                        <div style="font-size: 0.75rem; color: #cbd5e1; display: flex; flex-wrap: wrap; gap: 6px;">
+                            ${en.winner.uid ? `<span>ID: ${en.winner.uid}</span>` : ''}
+                            ${en.winner.shift ? `<span>• ${en.winner.shift}</span>` : ''}
+                            ${en.winner.supervisor ? `<span>• Sup: ${en.winner.supervisor}</span>` : ''}
+                        </div>
                     </div>
                 </td>
                 <td>

@@ -74,18 +74,13 @@ export class AnimationEngine {
         const startPos = this.position;
         
         // Dynamic Center Alignment
-        // TargetPos = (ViewportCenter) - (CardCenter)
-        const viewportCenter = window.innerWidth / 2;
-        const cardCenter = (targetIndex * this.itemSize) + (this.cardWidth / 2); // 280/2 = 140
+        // The track CSS has `left: 50%`, so x=0 is the visual center of viewport.
+        // We want the Center of the Target Card to be at x=0.
+        // Card Center relative to Track Start = (Index * ItemSize) + (CardWidth / 2).
+        // To bring that point to 0, we must translate by negative that amount.
         
-        // We assume track is at x=0 implies left edge of Card 0 is at x=0?
-        // Actually `translateX` moves the whole container.
-        // If container is centered in screen via CSS margin/flex, things get complex.
-        // BUT `picker-track` is usually `position: relative` or absolute inside a container.
-        // Let's assume standard behavior: `transform` moves it relative to its original flow position.
-        // If original flow starts at left=0.
-        
-        this.targetPosition = viewportCenter - cardCenter;
+        const cardCenterOffset = (targetIndex * this.itemSize) + (this.cardWidth / 2);
+        this.targetPosition = -cardCenterOffset;
         
         this.startTime = null;
         this.duration = duration;
