@@ -43,10 +43,11 @@ export class AnimationEngine {
         this.position -= this.idleSpeed;
         
         // Optimization: Reset position to prevent extreme values
-        // When we've scrolled past one full item, remove first card and reset
-        const threshold = -this.itemSize;
+        // When card is fully covered by left overlay (mask starts at 15% = ~150px on typical screen)
+        // We add extra buffer to ensure complete coverage before removal
+        const threshold = -(this.itemSize + 150); // Card width + overlay coverage
         if (this.position <= threshold) {
-            // Remove the first child card from DOM
+            // Remove the first child card from DOM (now fully hidden)
             if (this.track.firstChild) {
                 this.track.removeChild(this.track.firstChild);
             }
