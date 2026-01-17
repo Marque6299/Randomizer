@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Premium Random Name Picker</title>
+    <link rel="stylesheet" href="css/styles.css" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- SheetJS for Excel Parsing -->
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  </head>
+  <body>
+    <!-- Sticky Navigation -->
+    <nav class="navbar">
+      <div class="nav-brand">
+        <span class="logo-icon">🎲</span>
+        <h1>Randomizer<span class="accent-text">Pro</span></h1>
+      </div>
+      <div class="nav-controls">
+        <div class="mode-switch">
+          <button
+            id="btn-mode-random"
+            class="nav-btn active"
+            aria-label="Switch to Random Mode"
+          >
+            Random
+          </button>
+          <button
+            id="btn-mode-weighted"
+            class="nav-btn"
+            aria-label="Switch to Weighted Mode"
+          >
+            Weighted
+          </button>
+        </div>
+        <button
+          id="btn-sound-toggle"
+          class="icon-btn"
+          aria-label="Toggle Sound"
+        >
+          <span class="icon">🔊</span>
+        </button>
+        <button
+          id="btn-participants"
+          class="nav-btn outline"
+          aria-label="Manage Participants"
+        >
+          Participants (<span id="participant-count">0</span>)
+        </button>
+      </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="app-container">
+      <!-- Picker Section -->
+      <section id="picker-section" class="picker-display">
+        <div class="picker-window">
+          <div class="picker-track" id="picker-track">
+            <!-- Cards are injected here by JS -->
+          </div>
+          <div class="picker-marker"></div>
+          <div class="picker-overlay overlay-left"></div>
+          <div class="picker-overlay overlay-right"></div>
+        </div>
+
+        <div class="controls-area">
+          <button id="btn-spin" class="cta-button">SPIN</button>
+        </div>
+      </section>
+
+      <!-- Modals -->
+
+      <!-- Winner Modal -->
+      <div id="modal-winner" class="modal hidden">
+        <div class="modal-content glass-panel winner-panel">
+          <h2 class="winner-label">The Winner Is</h2>
+          <div id="winner-name" class="winner-name">Name Here</div>
+          <div class="winner-confetti" id="confetti-container"></div>
+          <div class="modal-actions">
+            <button class="modal-btn primary" id="btn-close-winner">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Participants Modal -->
+      <div id="modal-participants" class="modal hidden">
+        <div class="modal-content glass-panel">
+          <header class="modal-header">
+            <h2>Manage Participants</h2>
+            <button class="close-icon" id="btn-close-participants">
+              &times;
+            </button>
+          </header>
+          <div class="modal-body">
+            <div class="upload-area" id="drop-zone">
+              <p>Drag & Drop Excel/CSV here or</p>
+              <input
+                type="file"
+                id="file-upload"
+                accept=".cSv, .xlsx, .xls"
+                hidden
+              />
+              <button
+                class="btn-small"
+                onclick="document.getElementById('file-upload').click()"
+              >
+                Browse Files
+              </button>
+            </div>
+
+            <div class="data-toolbar">
+              <button id="btn-clear-data" class="text-danger">Clear All</button>
+              <a href="#" id="link-template" class="text-link"
+                >Download Template</a
+              >
+            </div>
+
+            <div class="participants-list" id="participants-list">
+              <!-- List items injected here -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Scripts -->
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>
