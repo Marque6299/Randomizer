@@ -118,6 +118,15 @@ class App {
             durationDisplay.textContent = e.target.value + 's';
         });
 
+        // Idle Speed Slider
+        const idleSpeedInput = document.getElementById('idle-speed');
+        const idleSpeedDisplay = document.getElementById('idle-speed-value');
+        idleSpeedInput.addEventListener('input', (e) => {
+            const speed = parseFloat(e.target.value);
+            idleSpeedDisplay.textContent = speed.toFixed(1);
+            this.animationEngine.idleSpeed = speed;
+        });
+
         // App Title Input
         const titleInput = document.getElementById('app-title-input');
         titleInput.addEventListener('input', (e) => {
@@ -358,7 +367,14 @@ class App {
         const prize = this.prizeInput.value.trim();
         this.dataManager.logWin(this.currentWinner, prize);
         
-        if(this.dataManager.removeWinner) {
+        // Weight Mode: Decrement and auto-remove at zero
+        if(this.dataManager.mode === 'weighted') {
+            const removed = this.dataManager.decrementWeight(this.currentWinner.id);
+            if(removed) {
+                console.log(`${this.currentWinner.name} weight reached 0, removed from pool.`);
+            }
+        } else if(this.dataManager.removeWinner) {
+            // Random Mode: Use toggle
             this.dataManager.removeParticipant(this.currentWinner.id);
         }
         
@@ -368,15 +384,22 @@ class App {
             this.prizeInput.value = "";
             statusEl.textContent = "Ready to Pick";
             statusEl.style.color = "var(--accent-cyan)";
+            this.updateParticipantsUI(); // Refresh if weight changed
         }, 2000);
     }
     
     showWinnerModal(prize) {
         this.winnerNameDisplay.textContent = this.currentWinner.name;
-        this.winnerPrizeDisplay.textContent = prize ? `Prize: ${prize}` : "CONGRATULATIONS!";
+        
+        // Update prize badge
+        if(prize) {
+            this.winnerPrizeDisplay.textContent = `🎁 ${prize}`;
+        } else {
+            this.winnerPrizeDisplay.textContent = '🎉 CONGRATULATIONS!';
+        }
         
         const avatarContainer = document.getElementById('winner-avatar');
-        // Generate Avatar Again
+        // Generate Avatar
         const p = this.currentWinner;
         const hash = p.name.split('').reduce((acc, char) => char.charCodeAt(0) + ((acc << 5) - acc), 0);
         const hue = Math.abs(hash % 360);
@@ -392,19 +415,19 @@ class App {
 
         this.winnerDetailsDisplay.innerHTML = `
             <div class="winner-detail-item">
-                <span class="label">ID Number</span>
+                <span class="label">👤 ID Number</span>
                 <span class="value">${this.currentWinner.uid || 'N/A'}</span>
             </div>
             <div class="winner-detail-item">
-                <span class="label">Department/Shift</span>
+                <span class="label">🏢 Department</span>
                 <span class="value">${this.currentWinner.shift || 'N/A'}</span>
             </div>
             <div class="winner-detail-item">
-                <span class="label">Supervisor</span>
+                <span class="label">👔 Supervisor</span>
                 <span class="value">${this.currentWinner.supervisor || 'N/A'}</span>
             </div>
             <div class="winner-detail-item">
-                <span class="label">Role/Tag</span>
+                <span class="label">🏷️ Role</span>
                 <span class="value">${this.currentWinner.tag || 'Participant'}</span>
             </div>
         `;

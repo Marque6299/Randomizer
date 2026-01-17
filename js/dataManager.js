@@ -55,6 +55,19 @@ export class DataManager {
         }
     }
 
+    decrementWeight(id) {
+        const p = this.participants.find(p => p.id === id);
+        if(p && p.weight > 0) {
+            p.weight -= 1;
+            if(p.weight === 0) {
+                this.removeParticipant(id);
+                return true; // Removed
+            }
+            return false; // Still active
+        }
+        return false;
+    }
+
     removeParticipant(id) {
         this.participants = this.participants.filter(p => p.id !== id);
     }

@@ -73,26 +73,35 @@
         <div id="status-indicator" class="status-text">Ready to Pick</div>
       </section>
 
-      <!-- Winner Modal -->
-      <div id="modal-winner" class="modal hidden">
-        <div class="modal-content winner-panel glass-panel">
-            <button class="close-icon absolute-top-right" id="btn-close-winner">&times;</button>
-            <div class="winner-decor"></div>
+      <!-- Winner Modal (Premium Design) -->
+      <div id="modal-winner" class="modal hidden winner-modal-premium">
+        <div class="modal-content winner-card glass-premium">
+            <button class="close-icon-premium" id="btn-close-winner">&times;</button>
             
-            <div class="winner-avatar-container" id="winner-avatar">
-                <!-- SVG Injected Here -->
+            <!-- Celebration Header -->
+            <div class="winner-celebration">
+                <div class="trophy-icon">🏆</div>
+                <h2 class="winner-announcement">WINNER SELECTED!</h2>
             </div>
             
-            <div class="winner-header">
-                <span class="winner-label">🎉 Winner Selected 🎉</span>
-                <h1 class="winner-name" id="winner-name">Name Check</h1>
+            <!-- Avatar Section -->
+            <div class="winner-profile">
+                <div class="winner-avatar-large" id="winner-avatar">
+                    <!-- SVG Injected Here -->
+                </div>
+                <h1 class="winner-name-display" id="winner-name">Name</h1>
             </div>
-
-            <div class="winner-prize" id="winner-prize"></div>
-
-            <div class="winner-details-grid" id="winner-details">
+            
+            <!-- Prize Badge -->
+            <div class="winner-prize-badge" id="winner-prize"></div>
+            
+            <!-- Information Grid -->
+            <div class="winner-info-grid" id="winner-details">
                 <!-- Details injected here -->
             </div>
+            
+            <!-- Confetti Container -->
+            <div class="confetti-rain" id="confetti-container"></div>
         </div>
       </div>
       
@@ -120,6 +129,11 @@
           <div class="setting-group">
               <label>Spin Duration: <span id="duration-value">15s</span></label>
               <input type="range" id="spin-duration" min="5" max="60" value="15" step="1" class="range-input">
+          </div>
+
+          <div class="setting-group">
+              <label>Idle Scroll Speed: <span id="idle-speed-value">0.5</span></label>
+              <input type="range" id="idle-speed" min="0.1" max="3" value="0.5" step="0.1" class="range-input">
           </div>
 
           <div class="setting-group">
