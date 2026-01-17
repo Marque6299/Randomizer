@@ -137,6 +137,14 @@ class App {
             e.preventDefault();
             this.downloadTemplate();
         });
+        
+        document.getElementById('btn-download-history').addEventListener('click', () => {
+             this.downloadHistory();
+        });
+        
+        document.getElementById('btn-slideshow').addEventListener('click', () => {
+             this.startSlideshow();
+        });
     }
     
     setMode(mode, btn) {
@@ -199,8 +207,11 @@ class App {
         this.historyListEl.innerHTML = log.map(en => `
             <tr>
                 <td>${en.timestamp}</td>
-                <td>${en.winner.name}</td>
-                <td>${en.prize}</td>
+                <td><strong>${en.winner.name}</strong></td>
+                <td>${en.winner.uid || '-'}</td>
+                <td>${en.winner.shift || '-'}</td>
+                <td>${en.winner.supervisor || '-'}</td>
+                <td style="color: var(--accent-secondary); font-weight: bold">${en.prize}</td>
             </tr>
         `).join('');
     }
@@ -374,17 +385,31 @@ class App {
     }
 
     createCardElement(p, isWinner = false) {
+        // Generate a deterministic color
+        const hash = p.name.split('').reduce((acc, char) => char.charCodeAt(0) + ((acc << 5) - acc), 0);
+        const hue = Math.abs(hash % 360);
+        const color = `hsl(${hue}, 70%, 65%)`; // Pastel/Vibrant
+        
         const div = document.createElement('div');
-        div.className = `picker-card ${isWinner ? 'winner-card-marker' : ''}`; // marker class for debug if needed
+        div.className = `picker-card ${isWinner ? 'winner-card-marker' : ''}`;
+        
         div.innerHTML = `
-            <div class="card-name">${p.name}</div>
-            <div class="card-details">
-                ${p.uid ? `<span class="card-tag">${p.uid}</span>` : ''}
-                ${p.shift ? `<span class="card-tag">${p.shift}</span>` : ''}
+            <div class="card-avatar" style="background: ${color}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+            </div>
+            <div class="card-content">
+                <div class="card-name">${p.name}</div>
+                <div class="card-role">${p.tag || 'Participant'}</div>
+                <div class="card-details">
+                    ${p.uid ? `<span class="detail-pill">${p.uid}</span>` : ''}
+                    ${p.shift ? `<span class="detail-pill">${p.shift}</span>` : ''}
+                </div>
             </div>
             ${this.dataManager.mode === 'weighted' && p.weight > 1 ? `<div class="card-weight">x${p.weight}</div>` : ''}
         `;
-        // We only show summary tags (UID/Shift) to keep card clean. supervisor/tag in modal.
         return div;
     }
     
@@ -403,7 +428,92 @@ class App {
         XLSX.utils.book_append_sheet(wb, ws, "Participants");
         XLSX.writeFile(wb, "name_picker_template.xlsx");
     }
-}
+    
+    downloadHistory() {
+        const history = this.dataManager.getHistory().map(h => ({
+            Time: h.timestamp,
+            Winner: h.winner.name || '',
+            ID: h.winner.uid || '',
+            Supervisor: h.winner.supervisor || '',
+            Shift: h.winner.shift || '',
+            Tag: h.winner.tag || '',
+            Prize: h.prize || ''
+        }));
+        
+        if(history.length === 0) {
+            alert("No history to export!");
+            return;
+        }
+
+        const ws = XLSX.utils.json_to_sheet(history);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Spin_History");
+        XLSX.writeFile(wb, `Spin_History_${new Date().toISOString().slice(0,10)}.xlsx`);
+    }
+
+    startSlideshow() {
+        const history = this.dataManager.getHistory();
+        if(history.length === 0) {
+            alert("No winners to show!");
+            return;
+        }
+
+        const modal = document.getElementById('modal-slideshow');
+        const display = document.getElementById('slide-display');
+        modal.classList.remove('hidden');
+        
+        // Start loop
+        let index = 0;
+        
+        const showSlide = () => {
+             if (index >= history.length) index = 0;
+             const entry = history[index];
+             const w = entry.winner;
+             
+             // Generate color/avatar
+             const hash = w.name.split('').reduce((acc, char) => char.charCodeAt(0) + ((acc << 5) - acc), 0);
+             const hue = Math.abs(hash % 360);
+             const color = `hsl(${hue}, 70%, 65%)`;
+
+             display.innerHTML = `
+                 <div class="slide-avatar" style="background: ${color}; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 4px solid white;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 60%; height: 60%; color: white;">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                 </div>
+                 <div class="slide-name">${w.name}</div>
+                 <div class="slide-prize">${entry.prize || 'No Prize'}</div>
+                 <div class="slide-details">
+                    ${w.uid ? `<div class="slide-pill">${w.uid}</div>` : ''}
+                    ${w.supervisor ? `<div class="slide-pill">${w.supervisor}</div>` : ''}
+                    ${w.shift ? `<div class="slide-pill">${w.shift}</div>` : ''}
+                 </div>
+             `;
+             
+             // Trigger re-flow for animation
+             display.classList.remove('animate');
+             void display.offsetWidth;
+             display.style.animation = 'none';
+             display.offsetHeight; /* trigger reflow */
+             display.style.animation = 'slideUp 0.5s ease-out';
+             
+             index++;
+        };
+        
+        showSlide();
+        this.slideshowInterval = setInterval(showSlide, 5000);
+        
+        // Close handler
+        const closeBtn = document.getElementById('btn-close-slideshow');
+        const close = () => {
+             clearInterval(this.slideshowInterval);
+             modal.classList.add('hidden');
+             closeBtn.removeEventListener('click', close);
+        };
+        closeBtn.addEventListener('click', close);
+    }
+
 
 // Start App
 document.addEventListener('DOMContentLoaded', () => {

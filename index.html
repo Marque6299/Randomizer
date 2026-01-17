@@ -137,25 +137,57 @@
 
       <!-- History Modal -->
       <div id="modal-history" class="modal hidden">
-        <div class="modal-content glass-panel">
+        <div class="modal-content glass-panel modal-lg">
           <header class="modal-header">
             <h2>Spin History</h2>
-            <button class="close-icon" id="btn-close-history">&times;</button>
+            <div class="header-actions">
+                <button id="btn-slideshow" class="btn-small">▶ Play Slideshow</button>
+                <button id="btn-download-history" class="btn-small">💾 Export Excel</button>
+                <button class="close-icon" id="btn-close-history">&times;</button>
+            </div>
           </header>
           <div class="modal-body">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Time</th>
-                        <th>Winner</th>
-                        <th>Prize</th>
-                    </tr>
-                </thead>
-                <tbody id="history-list"></tbody>
-            </table>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Winner</th>
+                            <th>ID</th>
+                            <th>Shift</th>
+                            <th>Supervisor</th>
+                            <th>Prize</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-list"></tbody>
+                </table>
+            </div>
           </div>
         </div>
       </div>
+
+      <!-- Slideshow Modal (Dinagyang Theme) -->
+      <div id="modal-slideshow" class="modal hidden dinagyang-theme">
+          <div class="slideshow-content">
+              <button id="btn-close-slideshow" class="close-overlay">&times;</button>
+              <div class="festive-decor top"></div>
+              <h1 class="slideshow-title">🎉 WINNERS GALLERY 🎉</h1>
+              
+              <div id="slide-display" class="slide-card">
+                  <!-- Injected content -->
+                  <div class="slide-avatar"></div>
+                  <div class="slide-name">Winner Name</div>
+                  <div class="slide-prize">Prize Info</div>
+                  <div class="slide-details">Details</div>
+              </div>
+              
+              <div class="festive-decor bottom"></div>
+          </div>
+      </div>
+
+      <!-- Watermark -->
+      <div class="watermark">MIS Digital Transformation</div>
+    </main>
 
       <!-- Participants Modal (Data Management) -->
       <div id="modal-participants" class="modal hidden">

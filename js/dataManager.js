@@ -57,9 +57,21 @@ export class DataManager {
     }
     
     logWin(winner, prize) {
+        // Prevent duplicates (simple debounce check)
+        const now = new Date();
+        if (this.historyLog.length > 0) {
+            const last = this.historyLog[0];
+            const timeDiff = now - last._rawDate;
+            // If same winner and less than 2 seconds, ignore
+            if (last.winner.id === winner.id && timeDiff < 2000) {
+                return;
+            }
+        }
+
         this.historyLog.unshift({
-            timestamp: new Date().toLocaleString(),
-            winner: winner,
+            _rawDate: now,
+            timestamp: now.toLocaleString(),
+            winner: winner, // Stores full object {name, uid, shift...}
             prize: prize || "No Prize"
         });
     }
