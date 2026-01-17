@@ -125,7 +125,6 @@
           <div class="setting-group">
               <label>Animation Theme</label>
               <select id="anim-theme" class="select-input">
-                  <option value="random">🎲 Random Cycle</option>
                   <option value="standard">Standard</option>
                   <option value="suspenseful">Suspenseful</option>
                   <option value="playful">Playful</option>
@@ -202,14 +201,14 @@
       </div>
 
       <!-- Slideshow Modal (Premium Theme) -->
+      <!-- Slideshow Modal (Premium Theme) -->
       <div id="modal-slideshow" class="modal hidden premium-slideshow">
           <div class="slideshow-fullscreen">
               <button id="btn-close-slideshow" class="close-overlay icon-btn">&times;</button>
               
-              <div class="slideshow-decor-glow"></div>
-              
               <div class="slideshow-header">
-                  <h1 class="slideshow-title">✨ Hall of Winners ✨</h1>
+                  <div class="slideshow-title">Winner's Gallery</div>
+                  <h2 class="slideshow-subtitle">Wall of Fame</h2>
               </div>
               
               <div id="slide-display" class="slide-card-premium">
@@ -217,7 +216,7 @@
               </div>
               
               <div class="slideshow-controls">
-                  <div class="progress-bar"><div class="progress-fill"></div></div>
+                  <div class="progress-bar"><div class="progress-fill" id="slide-progress"></div></div>
               </div>
           </div>
       </div>

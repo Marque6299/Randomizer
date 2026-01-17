@@ -268,7 +268,10 @@ class App {
         this.renderCardsToTrack(buffer, true);
         this.currentTrackData = buffer;
         
-        this.animationEngine.resetPosition(); // Fix: Reset offset so new track starts at 0
+        this.animationEngine.resetPosition(); // Fix: Reset offset 
+        this.animationEngine.isSpinning = false; // Force reset state
+        this.animationEngine.isIdle = false; // Force reset state to allow start
+        
         this.animationEngine.startIdle();
     }
     
@@ -312,16 +315,12 @@ class App {
         this.audioManager.playSpinStart();
         
         // 1. Select Winner
+        // 1. Select Winner
         const winner = PickerLogic.selectWinner(participants, this.dataManager.mode);
         this.currentWinner = winner;
         
-        // 2. Resolve Random Theme
-        let theme = this.currentTheme;
-        if (theme === 'random') {
-             const options = ['standard', 'suspenseful', 'playful', 'dramatic', 'funny'];
-             theme = options[Math.floor(Math.random() * options.length)];
-             console.log("Random Theme Selected:", theme);
-        }
+        // 2. Theme
+        const theme = this.currentTheme;
 
         // 3. Prepare Track
         this.animationEngine.resetIdleSpeed(); // Stop fast shuffle, seamless handoff
@@ -369,30 +368,6 @@ class App {
             this.prizeInput.value = "";
             statusEl.textContent = "Ready to Pick";
             statusEl.style.color = "var(--accent-cyan)";
-        }, 2000);
-    }
-    
-    onSpinFinish() {
-        this.audioManager.playWin();
-        
-        // Prize
-        const prize = this.prizeInput.value.trim();
-        
-        // Log
-        this.dataManager.logWin(this.currentWinner, prize);
-        
-        // Remove Functionality
-        if(this.dataManager.removeWinner) {
-            this.dataManager.removeParticipant(this.currentWinner.id);
-        }
-        
-        // DELAY: Wait 2.0s to show modal so user sees arrow verify
-        setTimeout(() => {
-            this.showWinnerModal(prize);
-            this.btnSpin.disabled = false;
-            // Note: We do NOT clear prize input here so user can edit it or it persists? 
-            // Usually reset. 
-            this.prizeInput.value = "";
         }, 2000);
     }
     
@@ -541,14 +516,16 @@ class App {
              const color = `hsl(${hue}, 70%, 65%)`;
 
              display.innerHTML = `
-                 <div class="slide-avatar-large" style="background: ${color}">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 60%; height: 60%; color: white;">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="12" cy="7" r="4"></circle>
-                    </svg>
+                 <div class="slide-hero">
+                     <div class="slide-avatar-large" style="background: ${color}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 50%; height: 50%; color: white;">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                     </div>
+                     <div class="slide-name-large">${w.name}</div>
+                     <div class="slide-prize-large">${entry.prize || 'No Prize'}</div>
                  </div>
-                 <div class="slide-name-large">${w.name}</div>
-                 <div class="slide-prize-large">${entry.prize || 'No Prize'}</div>
                  
                  <div class="slide-meta-grid">
                     <div class="slide-meta-item">
@@ -556,7 +533,7 @@ class App {
                         <span class="slide-meta-value">${w.uid || '-'}</span>
                     </div>
                     <div class="slide-meta-item">
-                        <span class="slide-meta-label">Department</span>
+                        <span class="slide-meta-label">Shift</span>
                         <span class="slide-meta-value">${w.shift || '-'}</span>
                     </div>
                     <div class="slide-meta-item">
@@ -572,8 +549,15 @@ class App {
              
              // Trigger re-flow for animation
              display.classList.remove('animate');
+             const progress = document.getElementById('slide-progress');
+             progress.style.transition = 'none';
+             progress.style.width = '0%';
+             
              void display.offsetWidth; // Force Reflow
+             
              display.classList.add('animate');
+             progress.style.transition = 'width 5s linear';
+             progress.style.width = '100%';
              
              index++;
         };
