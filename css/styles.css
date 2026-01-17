@@ -134,17 +134,27 @@ body {
   transform: rotate(30deg);
 }
 
+/* App Header Section */
+.app-header-section {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding-top: 3rem;
+    padding-bottom: 1rem;
+    z-index: 10;
+}
+
 /* App Container */
 .app-container {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: center; /* Center vertical */
   align-items: center;
   position: relative;
   background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
   overflow: hidden;
-  gap: 1rem;
+  /* Removed gap, let picker center itself */
 }
 
 /* App Display Title */
