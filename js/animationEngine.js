@@ -78,6 +78,12 @@ export class AnimationEngine {
         this.idleSpeed = 0.5;
     }
 
+    resetPosition() {
+        this.position = 0;
+        this.track.style.transform = `translateX(0px)`;
+        this.lastIndex = 0;
+    }
+
     /**
      * seamless transition from idle to spin
      */

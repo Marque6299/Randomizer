@@ -268,6 +268,7 @@ class App {
         this.renderCardsToTrack(buffer, true);
         this.currentTrackData = buffer;
         
+        this.animationEngine.resetPosition(); // Fix: Reset offset so new track starts at 0
         this.animationEngine.startIdle();
     }
     
