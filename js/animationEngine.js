@@ -65,59 +65,22 @@ export class AnimationEngine {
     }
 
     /**
-     * seamless transition from idle to spin
+     * Rapid scrolling effect for "Shuffle" phase
      */
-    startShuffle(duration = 5000, onShuffleComplete) {
-        if (this.isSpinning) return;
-        this.stopIdle();
-        this.isSpinning = true; // Block other actions
-        
-        // Shuffle Effect: Oscillate speed or random direction
-        // For a linear track, let's accelerate smoothly then decelerate
-        // Simulates "shuffling" the deck
-        
-        const startTime = performance.now();
-        const startPos = this.position;
-        // Move significantly: say 2000px
-        const totalDistance = 3000; 
-        
-        const tick = (time) => {
-            const elapsed = time - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-            
-            // Ease in out sine for smooth "Mixing" look
-            // Or maybe a "Back and Forth"? No, user said "Shuffle ... then transition"
-            // Let's do a fast forward scroll that varies in speed
-            // Sine wave speed?
-            
-            // Custom Shuffle Ease: Fast, then slow, then fast? 
-            // Let's stick to a smooth acceleration loop
-            
-            // Just move fast for 5 seconds.
-            const currentMove = (elapsed * 2); // Linear speed for shuffle?
-            // Let's make it look "active": additive position
-            
-            this.position -= 15; // Fast constant scroll
-            this.track.style.transform = `translateX(${this.position}px)`;
-            
-            // Card Event for infinite scroll
-            const index = Math.floor(Math.abs(this.position) / this.itemSize);
-            if (index > this.lastIndex) {
-                 this.lastIndex = index;
-                 if(this.onTick) this.onTick(); // Sound effect during shuffle
-                 if(this.onCardExit) this.onCardExit();
-            }
-            
-            if (progress < 1) {
-                this.rafId = requestAnimationFrame(tick);
-            } else {
-                if(onShuffleComplete) onShuffleComplete();
-            }
-        };
-        
-        this.rafId = requestAnimationFrame(tick);
+    visualShuffle(speed = 30) {
+        // Just really fast idle loop
+        this.isIdle = true;
+        this.idleSpeed = speed; // High speed
+        if(!this.idleReqId) this._idleLoop();
     }
 
+    resetIdleSpeed() {
+        this.idleSpeed = 0.5;
+    }
+
+    /**
+     * seamless transition from idle to spin
+     */
     spinFromIdle(targetIndex, duration = 6000, theme = 'standard') {
         this.isSpinning = true;
         this.isIdle = false;
@@ -125,13 +88,18 @@ export class AnimationEngine {
         const startPos = this.position;
         
         // Dynamic Center Alignment
+        // The track CSS has `left: 50%`, so x=0 is the visual center of viewport.
+        // We want the Center of the Target Card to be at x=0.
+        // Card Center relative to Track Start = (Index * ItemSize) + (CardWidth / 2).
+        // To bring that point to 0, we must translate by negative that amount.
+        
         const cardCenterOffset = (targetIndex * this.itemSize) + (this.cardWidth / 2);
         this.targetPosition = -cardCenterOffset;
         
         this.startTime = null;
         this.duration = duration;
         this.startPosition = startPos;
-        this.easing = theme; 
+        this.easing = theme; // Store theme to select algo
         
         cancelAnimationFrame(this.rafId);
         
@@ -145,20 +113,24 @@ export class AnimationEngine {
             
             switch(theme) {
                 case 'suspenseful':
-                    // Very slow end: Quintic
-                    ease = 1 - Math.pow(1 - progress, 5); 
-                    break;
+                    // Very slow end
+                    // Quartic out with an extended tail? simply longer duration handled by caller?
+                    // Let's use specific bezier: fast start, VEERY slow creep
+                    // Bezier(0.1, 0.9, 0.1, 1.0)
+                   ease = 1 - Math.pow(1 - progress, 6); // Quintic+
+                   break;
                 case 'dramatic':
-                    // Exponential Out
-                     ease = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+                    // Fast start, sudden brake, slow finish
+                    // Exponential out
+                    ease = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
                     break;
                 case 'playful':
-                    // Elastic Out
+                    // Elastic out
                     const c4 = (2 * Math.PI) / 3;
                     ease = progress === 0 ? 0 : progress === 1 ? 1 : Math.pow(2, -10 * progress) * Math.sin((progress * 10 - 0.75) * c4) + 1;
                     break;
                 case 'funny':
-                     // Back Out
+                    // Back out (Overshoot)
                      const c1 = 1.70158;
                      const c3 = c1 + 1;
                      ease = 1 + c3 * Math.pow(progress - 1, 3) + c1 * Math.pow(progress - 1, 2);
@@ -168,19 +140,16 @@ export class AnimationEngine {
                     // Cubic Out
                     ease = 1 - Math.pow(1 - progress, 3);
             }
-             
-            // Sound density check (fewer clicks at end)
-             const currentPos = startPos + (this.targetPosition - startPos) * ease;
+            
+            const currentPos = startPos + (this.targetPosition - startPos) * ease;
             
             this.track.style.transform = `translateX(${currentPos}px)`;
             
-            // Sound Logic
+            // Sound
             const rawIndex = Math.abs(currentPos / this.itemSize);
             const visibleIndex = Math.floor(rawIndex);
             
             if (visibleIndex > this.lastIndex) {
-               // Only play sound if speed is high enough or near end?
-               // Standard tick is good.
                if (this.onTick) this.onTick();
                this.lastIndex = visibleIndex;
             }

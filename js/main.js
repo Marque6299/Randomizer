@@ -120,14 +120,12 @@ class App {
 
         // App Title Input
         const titleInput = document.getElementById('app-title-input');
-        const mainTitle = document.getElementById('main-title'); // Main H1
-        const updateTitle = (val) => {
-            const t = val || 'Premium Random Picker';
-            document.querySelector('.navbar-brand').textContent = t;
-            mainTitle.textContent = t;
-            document.title = t;
-        };
-        titleInput.addEventListener('input', (e) => updateTitle(e.target.value));
+        titleInput.addEventListener('input', (e) => {
+            const val = e.target.value;
+            document.querySelector('.navbar-brand').textContent = val || 'Premium Random Picker';
+            document.getElementById('app-title-display').textContent = val || 'Premium Random Picker';
+            document.title = val || 'Premium Random Picker';
+        });
 
         // File Upload
         this.fileInput.addEventListener('change', (e) => this.handleFileUpload(e));
@@ -287,19 +285,49 @@ class App {
         if (participants.length === 0) { alert("Add participants!"); return; }
         
         this.btnSpin.disabled = true;
+        
+        // --- PHASE 1: SHUFFLE ---
+        const statusEl = document.getElementById('status-indicator');
+        statusEl.textContent = "Shuffling Participants...";
+        statusEl.style.color = "#fcd34d"; // Gold
+        
+        // Visual Shuffle Effect (Speed up)
+        this.animationEngine.visualShuffle(40); // Fast scroll
+        
+        // Wait 5 seconds
+        setTimeout(() => {
+            // --- PHASE 2: PICK ---
+            statusEl.textContent = "Picking Winner...";
+            statusEl.style.color = "#ec4899"; // Pink
+            
+            // True Randomization of Data
+            this.dataManager.shuffleParticipants();
+            
+            this.executeSpin(this.dataManager.getParticipants());
+        }, 5000);
+    }
+
+    executeSpin(participants) {
         this.audioManager.playSpinStart();
         
+        // 1. Select Winner
         const winner = PickerLogic.selectWinner(participants, this.dataManager.mode);
         this.currentWinner = winner;
         
-        const currentCardCount = this.track.children.length;
-        // Adjust landing distance based on duration? 
-        // 15s needs more cards than 5s.
-        // Approx 10 cards per second at max speed?
-        const duration = parseInt(document.getElementById('spin-duration').value) * 1000;
-        const landingDistance = Math.max(60, Math.floor(duration / 100)); // Dynamic distance
+        // 2. Resolve Random Theme
+        let theme = this.currentTheme;
+        if (theme === 'random') {
+             const options = ['standard', 'suspenseful', 'playful', 'dramatic', 'funny'];
+             theme = options[Math.floor(Math.random() * options.length)];
+             console.log("Random Theme Selected:", theme);
+        }
+
+        // 3. Prepare Track
+        this.animationEngine.resetIdleSpeed(); // Stop fast shuffle, seamless handoff
         
-        const targetIndex = currentCardCount + landingDistance; 
+        const currentCardCount = this.track.children.length;
+        const duration = parseInt(document.getElementById('spin-duration').value) * 1000;
+        const landingDistance = Math.max(60, Math.floor(duration / 100)); 
         
         const fragment = document.createDocumentFragment();
         for(let i=0; i<landingDistance; i++) {
@@ -317,48 +345,30 @@ class App {
         
         this.track.appendChild(fragment);
         
-        // 4. Execute Spin (Seamless)
-        // Accurate Alignment:
-        // We want the center of the Winner Card to be exactly at the center of the screen (50vw).
-        // Track Position 0 = Left edge of Card 0 at 0px (relative to container).
-        // But container has padding-left: 50%? No, looking at CSS, track is just a flex container.
-        // The `picker-marker` is at `left: 50%`.
-        // So we want Winner Card Center to be at Track X where X coincides with 50vw.
-        // Transform is `translateX(pos)`.
-        // Screen Center SC = window.innerWidth / 2.
-        // Card Center CC = (TargetIndex * ItemSize) + (ItemSize / 2). "ItemSize" includes gap?
-        // Card Width is 280, Gap 20. ItemSize 300? 
-        // Let's assume AnimationEngine.itemSize is correct (300).
-        // To verify: we want `Start of Track + pos + CC = SC`.
-        // `pos = SC - CC`.
-        // `pos = (WindowWidth / 2) - ((TargetIndex * ItemSize) + (ItemSize / 2))`.
+        // 4. Spin
+        this.animationEngine.spinFromIdle(currentCardCount + landingDistance, duration, theme);
+    }
+    
+    onSpinFinish() {
+        this.audioManager.playWin();
+        const statusEl = document.getElementById('status-indicator');
+        statusEl.textContent = "Winner Picked!";
+        statusEl.style.color = "#22c55e"; // Green
         
-        // However, `AnimationEngine` treats `position` as simple linear offset.
-        // If we assumed the track starts at left edge.
-        // Current logic `spinFromIdle` only takes index.
-        // We will calculate the RAW PIXEL TARGET here and pass it to a new method or override.
-        // Actually, let's just tune the `spinFromIdle` call or parameters.
-        // Simpler: Just pass the index, and let AnimationEngine handle the offset if we fix it there.
-        // BUT, since we can't easily edit AnimationEngine constantly without risk, let's pass a `calibratedOffset`?
-        // No, let's fix the logic right here.
+        const prize = this.prizeInput.value.trim();
+        this.dataManager.logWin(this.currentWinner, prize);
         
-        // Let's use `spinFromIdle` but inside AnimationEngine we will fix the math 
-        // OR we manually calculate target and set it? No `spinFromIdle` calculates target internaly.
-        // Let's stick to the simpler visual alignment we tested (-130).
-        // User asked for "Accurate". 
-        // The safest "Accurate" without refactoring everything is to account for the viewport center.
+        if(this.dataManager.removeWinner) {
+            this.dataManager.removeParticipant(this.currentWinner.id);
+        }
         
-        // Let's try:
-        // Center of Card = Index * 300 + 140.
-        // Center of Viewport = window.innerWidth / 2.
-        // Offset needed = CenterViewport - CenterCard.
-        // So TargetPos = (window.innerWidth / 2) - (targetIndex * 300 + 140).
-        
-        // We can pass this `TargetPos` to `spinFromIdle` if we modify it to accept raw pos or offset.
-        // Let's modify `spinFromIdle` in `animationEngine.js` next.
-        // Here we just pass the index.
-        
-        this.animationEngine.spinFromIdle(currentCardCount + landingDistance, duration, this.currentTheme);
+        setTimeout(() => {
+            this.showWinnerModal(prize);
+            this.btnSpin.disabled = false;
+            this.prizeInput.value = "";
+            statusEl.textContent = "Ready to Pick";
+            statusEl.style.color = "var(--accent-cyan)";
+        }, 2000);
     }
     
     onSpinFinish() {

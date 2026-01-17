@@ -28,6 +28,13 @@ export class DataManager {
     getParticipants() {
         return this.participants;
     }
+
+    shuffleParticipants() {
+        for (let i = this.participants.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [this.participants[i], this.participants[j]] = [this.participants[j], this.participants[i]];
+        }
+    }
     
     getHistory() {
         return this.historyLog;
