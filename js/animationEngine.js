@@ -42,23 +42,27 @@ export class AnimationEngine {
         // Move position
         this.position -= this.idleSpeed;
         
-        // Check for card exit
-        // If position moves by itemSize, it means one card has fully left
-        // We can treat position relative to a virtual infinite track
-        // But for DOM, we just move `translateX`.
-        // To keep DOM manageable, we rely on Main.js to append cards and reset offset if needed.
-        // Actually, let's just let it drift and notify Main.js to reshuffle DOM if it gets too far?
-        // Better: Notify every time a card crosses -itemSize.
+        // Optimization: Reset position to prevent extreme values
+        // When we've scrolled past one full item, remove first card and reset
+        const threshold = -this.itemSize;
+        if (this.position <= threshold) {
+            // Remove the first child card from DOM
+            if (this.track.firstChild) {
+                this.track.removeChild(this.track.firstChild);
+            }
+            // Reset position by one item width
+            this.position += this.itemSize;
+            
+            // Notify to add a new card at the end
+            if(this.onCardExit) this.onCardExit();
+        }
         
-        // Logic: Main.js creates a buffer. We just scroll.
         this.track.style.transform = `translateX(${this.position}px)`;
 
-        // Check if we crossed a card boundary
+        // Check if we crossed a card boundary for sound effects
         const index = Math.floor(Math.abs(this.position) / this.itemSize);
         if (index > this.lastIndex) {
-             // Card passed
              this.lastIndex = index;
-             if(this.onCardExit) this.onCardExit();
         }
 
         this.idleReqId = requestAnimationFrame(() => this._idleLoop());
