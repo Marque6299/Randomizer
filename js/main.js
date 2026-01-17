@@ -513,7 +513,7 @@ class App {
         };
         closeBtn.addEventListener('click', close);
     }
-
+}
 
 // Start App
 document.addEventListener('DOMContentLoaded', () => {
