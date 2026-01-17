@@ -2,8 +2,6 @@
  * Handles the linear motion animation for the picker.
  * Uses requestAnimationFrame for smooth 60fps performance.
  */
-import { PickerLogic } from './pickerLogic.js';
-
 export class AnimationEngine {
     constructor(trackElement, cardWidth, gap) {
         this.track = trackElement;
@@ -12,76 +10,117 @@ export class AnimationEngine {
         this.itemSize = cardWidth + gap;
         
         this.isSpinning = false;
-        this.velocity = 0;
         this.position = 0;
-        this.targetPosition = 0;
+        
+        // Idle System
+        this.isIdle = false;
+        this.idleSpeed = 0.5; // pixels per frame
+        this.idleReqId = null;
         
         this.onTick = null; // Callback for sound
         this.onFinish = null; // Callback for winner calculation
+        this.onCardExit = null; // Callback when a card leaves the left side (for infinite loop)
         
-        // Track the last passed index to trigger tick sounds
         this.lastIndex = 0;
     }
 
-    reset() {
-        this.position = 0;
-        this.track.style.transform = `translateX(0px)`;
+    startIdle() {
+        if (this.isSpinning || this.isIdle) return;
+        this.isIdle = true;
+        this.lastTime = performance.now();
+        this._idleLoop();
+    }
+    
+    stopIdle() {
+        this.isIdle = false;
+        if (this.idleReqId) cancelAnimationFrame(this.idleReqId);
+    }
+
+    _idleLoop() {
+        if (!this.isIdle) return;
+
+        // Move position
+        this.position -= this.idleSpeed;
+        
+        // Check for card exit
+        // If position moves by itemSize, it means one card has fully left
+        // We can treat position relative to a virtual infinite track
+        // But for DOM, we just move `translateX`.
+        // To keep DOM manageable, we rely on Main.js to append cards and reset offset if needed.
+        // Actually, let's just let it drift and notify Main.js to reshuffle DOM if it gets too far?
+        // Better: Notify every time a card crosses -itemSize.
+        
+        // Logic: Main.js creates a buffer. We just scroll.
+        this.track.style.transform = `translateX(${this.position}px)`;
+
+        // Check if we crossed a card boundary
+        const index = Math.floor(Math.abs(this.position) / this.itemSize);
+        if (index > this.lastIndex) {
+             // Card passed
+             this.lastIndex = index;
+             if(this.onCardExit) this.onCardExit();
+        }
+
+        this.idleReqId = requestAnimationFrame(() => this._idleLoop());
     }
 
     /**
-     * Start the spin animation
-     * @param {Object} winner - The pre-determined winner object
-     * @param {Array} trackList - The full list of cards to render
-     * @param {Number} winnerIndex - The index of the winner in the trackList
+     * seamless transition from idle to spin
      */
-    spin(winnerIndex, duration = 6000) {
-        if (this.isSpinning) return;
+    spinFromIdle(targetIndex, duration = 6000, theme = 'standard') {
+        this.stopIdle();
         this.isSpinning = true;
         
-        // Initial setup
-        const startPosition = 0; // Assuming we reset to 0 before spin
-        // Calculate target location
-        // The marker is at center. 0 position means the LEFT EDGE of the first card is at center (minus offset).
-        // Actually, let's align: 
-        // We want the winner card CENTER to trigger.
-        // If track is centered at 50% screen, and translateX moves it left.
+        const startPos = this.position;
+        const targetPos = -(targetIndex * this.itemSize); 
         
-        // Logic:
-        // By default CSS centers the track. 
-        // position 0 = Card 0 is centered.
-        // position N * itemSize = Card N is centered.
-        // We want to move to - (winnerIndex * itemSize).
-        // Plus some randomness to land not perfectly in center? (Optional polish).
-        
-        // For accurate loop landing:
-        // We want to travel a specific huge distance.
-        // Let's use a physics emulation or a bezier curve for position.
-        
-        // Bezier Ease approach (simpler to control duration):
-        // t goes from 0 to 1 over duration.
-        // pos goes from 0 to targetX.
-        
-        this.targetPosition = -(winnerIndex * this.itemSize);
-        // Add a random offset within the card (-40% to +40%) to make it feel "analog"
+        // Add random jitter to land inside the card
         const jitter = (Math.random() * 0.8 - 0.4) * this.cardWidth;
-        this.targetPosition += jitter;
-
+        const finalTarget = targetPos + jitter;
+        
         const startTime = performance.now();
         
         const animate = (time) => {
             const elapsed = time - startTime;
             const progress = Math.min(elapsed / duration, 1);
             
-            // Custom Easing: Cubic Bezier (0.22, 1, 0.36, 1) - "Out Quint" feel
-            // 1 - pow(1 - x, 4) is generally good for "spin" stopping
-            const ease = 1 - Math.pow(1 - progress, 4);
+            let ease;
             
-            const currentPos = startPosition + (this.targetPosition - startPosition) * ease;
+            switch(theme) {
+                case 'suspenseful':
+                    // Very slow end
+                    // Quartic out with an extended tail? simply longer duration handled by caller?
+                    // Let's use specific bezier: fast start, VEERY slow creep
+                    // Bezier(0.1, 0.9, 0.1, 1.0)
+                   ease = 1 - Math.pow(1 - progress, 6); // Quintic+
+                   break;
+                case 'dramatic':
+                    // Fast start, sudden brake, slow finish
+                    // Exponential out
+                    ease = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+                    break;
+                case 'playful':
+                    // Elastic out
+                    const c4 = (2 * Math.PI) / 3;
+                    ease = progress === 0 ? 0 : progress === 1 ? 1 : Math.pow(2, -10 * progress) * Math.sin((progress * 10 - 0.75) * c4) + 1;
+                    break;
+                case 'funny':
+                    // Back out (Overshoot)
+                     const c1 = 1.70158;
+                     const c3 = c1 + 1;
+                     ease = 1 + c3 * Math.pow(progress - 1, 3) + c1 * Math.pow(progress - 1, 2);
+                     break;
+                case 'standard':
+                default:
+                    // Cubic Out
+                    ease = 1 - Math.pow(1 - progress, 3);
+            }
+            
+            const currentPos = startPos + (finalTarget - startPos) * ease;
             
             this.track.style.transform = `translateX(${currentPos}px)`;
             
-            // Sound Trigger Logic
-            // Calculate which card index is passing the center
+            // Sound
             const rawIndex = Math.abs(currentPos / this.itemSize);
             const visibleIndex = Math.floor(rawIndex);
             

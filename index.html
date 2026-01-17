@@ -25,28 +25,12 @@
         <h1>Randomizer<span class="accent-text">Pro</span></h1>
       </div>
       <div class="nav-controls">
-        <div class="mode-switch">
-          <button
-            id="btn-mode-random"
-            class="nav-btn active"
-            aria-label="Switch to Random Mode"
-          >
-            Random
-          </button>
-          <button
-            id="btn-mode-weighted"
-            class="nav-btn"
-            aria-label="Switch to Weighted Mode"
-          >
-            Weighted
-          </button>
-        </div>
-        <button
-          id="btn-sound-toggle"
-          class="icon-btn"
-          aria-label="Toggle Sound"
+         <button
+          id="btn-history"
+          class="nav-btn"
+          aria-label="View History"
         >
-          <span class="icon">🔊</span>
+          📜 History
         </button>
         <button
           id="btn-participants"
@@ -54,6 +38,13 @@
           aria-label="Manage Participants"
         >
           Participants (<span id="participant-count">0</span>)
+        </button>
+         <button
+          id="btn-settings"
+          class="icon-btn"
+          aria-label="Settings"
+        >
+          <span class="icon">⚙️</span>
         </button>
       </div>
     </nav>
@@ -72,9 +63,57 @@
         </div>
 
         <div class="controls-area">
+          <div class="input-wrapper">
+             <input type="text" id="prize-input" class="prize-input" placeholder="Enter Prize (Optional)" />
+          </div>
           <button id="btn-spin" class="cta-button">SPIN</button>
         </div>
       </section>
+
+      <!-- Settings Panel (Side Panel) -->
+      <div id="settings-panel" class="side-panel hidden-panel">
+          <div class="panel-header">
+              <h2>Settings</h2>
+              <button id="btn-close-settings" class="icon-btn">&times;</button>
+          </div>
+          <div class="panel-content">
+              <div class="setting-group">
+                  <label>Mode</label>
+                  <div class="toggle-group">
+                      <button id="set-mode-random" class="toggle-btn active">Random</button>
+                      <button id="set-mode-weighted" class="toggle-btn">Weighted</button>
+                  </div>
+              </div>
+              
+              <div class="setting-group">
+                  <label for="anim-theme">Animation Theme</label>
+                  <select id="anim-theme" class="select-input">
+                      <option value="standard">Standard</option>
+                      <option value="suspenseful">Suspenseful</option>
+                      <option value="playful">Playful</option>
+                      <option value="dramatic">Dramatic</option>
+                      <option value="funny">Funny</option>
+                  </select>
+              </div>
+
+               <div class="setting-group row">
+                  <label for="toggle-remove-winner">Remove Winner After Spin</label>
+                  <label class="switch">
+                      <input type="checkbox" id="toggle-remove-winner">
+                      <span class="slider round"></span>
+                  </label>
+              </div>
+
+               <div class="setting-group row">
+                  <label for="toggle-sound">Sound Effects</label>
+                  <label class="switch">
+                      <input type="checkbox" id="toggle-sound" checked>
+                      <span class="slider round"></span>
+                  </label>
+              </div>
+          </div>
+      </div>
+      <div id="panel-overlay" class="panel-overlay hidden"></div>
 
       <!-- Modals -->
 
@@ -83,6 +122,10 @@
         <div class="modal-content glass-panel winner-panel">
           <h2 class="winner-label">The Winner Is</h2>
           <div id="winner-name" class="winner-name">Name Here</div>
+          <div id="winner-prize" class="winner-prize"></div>
+          <div class="winner-details" id="winner-details">
+              <!-- Grid of details injected here -->
+          </div>
           <div class="winner-confetti" id="confetti-container"></div>
           <div class="modal-actions">
             <button class="modal-btn primary" id="btn-close-winner">
@@ -92,41 +135,66 @@
         </div>
       </div>
 
-      <!-- Participants Modal -->
-      <div id="modal-participants" class="modal hidden">
+      <!-- History Modal -->
+      <div id="modal-history" class="modal hidden">
         <div class="modal-content glass-panel">
           <header class="modal-header">
-            <h2>Manage Participants</h2>
+            <h2>Spin History</h2>
+            <button class="close-icon" id="btn-close-history">&times;</button>
+          </header>
+          <div class="modal-body">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Winner</th>
+                        <th>Prize</th>
+                    </tr>
+                </thead>
+                <tbody id="history-list"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Participants Modal (Data Management) -->
+      <div id="modal-participants" class="modal hidden">
+        <div class="modal-content glass-panel modal-lg">
+          <header class="modal-header">
+            <h2>Data Management</h2>
             <button class="close-icon" id="btn-close-participants">
               &times;
             </button>
           </header>
           <div class="modal-body">
-            <div class="upload-area" id="drop-zone">
-              <p>Drag & Drop Excel/CSV here or</p>
-              <input
-                type="file"
-                id="file-upload"
-                accept=".cSv, .xlsx, .xls"
-                hidden
-              />
-              <button
-                class="btn-small"
-                onclick="document.getElementById('file-upload').click()"
-              >
-                Browse Files
-              </button>
+            <div class="upload-area small" id="drop-zone">
+              <p>Drag & Drop Excel/CSV to Append</p>
+               <input type="file" id="file-upload" accept=".cSv, .xlsx, .xls" hidden />
+               <button class="btn-micro" onclick="document.getElementById('file-upload').click()">Browse</button>
             </div>
 
             <div class="data-toolbar">
               <button id="btn-clear-data" class="text-danger">Clear All</button>
-              <a href="#" id="link-template" class="text-link"
-                >Download Template</a
-              >
+              <a href="#" id="link-template" class="text-link">Download Template</a>
             </div>
 
-            <div class="participants-list" id="participants-list">
-              <!-- List items injected here -->
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>UID</th>
+                            <th>Supervisor</th>
+                            <th>Shift</th>
+                            <th>Tag</th>
+                            <th>Weight</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="participants-table-body">
+                        <!-- Rows injected by JS -->
+                    </tbody>
+                </table>
             </div>
           </div>
         </div>

@@ -3,45 +3,69 @@
  */
 export class DataManager {
     constructor() {
-        this.participants = []; // Array of { name, weight, id }
+        this.participants = []; // Array of { name, uid, supervisor, shift, tag, weight, id }
+        this.historyLog = []; // Array of { timestamp, winner, prize }
         this.mode = 'random'; // 'random' | 'weighted'
+        this.removeWinner = false; // Setting
         
-        // Load default demo data
+        // Load default demo data if empty
         this.loadDemoData();
     }
 
     loadDemoData() {
+        // ID generation helper
+        const uid = () => Math.random().toString(36).substr(2, 9);
+        
         this.participants = [
-            { name: "Alice", weight: 1 },
-            { name: "Bob", weight: 1 },
-            { name: "Charlie", weight: 2 },
-            { name: "Diana", weight: 1 },
-            { name: "Ethan", weight: 5 }, // High weight
-            { name: "Fiona", weight: 1 },
-            { name: "George", weight: 1 }
+            { id: uid(), name: "Alice", uid: "A001", supervisor: "Smith", shift: "Morning", tag: "Team A", weight: 1 },
+            { id: uid(), name: "Bob", uid: "B002", supervisor: "Smith", shift: "Morning", tag: "Team A", weight: 1 },
+            { id: uid(), name: "Charlie", uid: "C003", supervisor: "Jones", shift: "Night", tag: "Team B", weight: 2 },
+            { id: uid(), name: "Diana", uid: "D004", supervisor: "Jones", shift: "Night", tag: "Team B", weight: 1 },
+            { id: uid(), name: "Ethan", uid: "E005", supervisor: "Brown", shift: "Morning", tag: "Team C", weight: 5 },
         ];
     }
 
     getParticipants() {
         return this.participants;
     }
+    
+    getHistory() {
+        return this.historyLog;
+    }
 
     setMode(mode) {
         this.mode = mode;
     }
+    
+    setRemoveWinner(val) {
+        this.removeWinner = val;
+    }
 
-    addParticipant(name, weight = 1) {
-        this.participants.push({ name, weight });
+    updateWeight(id, newWeight) {
+        const p = this.participants.find(p => p.id === id);
+        if(p) {
+            p.weight = Number(newWeight);
+        }
+    }
+
+    removeParticipant(id) {
+        this.participants = this.participants.filter(p => p.id !== id);
     }
 
     clearParticipants() {
         this.participants = [];
     }
+    
+    logWin(winner, prize) {
+        this.historyLog.unshift({
+            timestamp: new Date().toLocaleString(),
+            winner: winner,
+            prize: prize || "No Prize"
+        });
+    }
 
     /**
      * Parse an uploaded file (Excel/CSV)
-     * @param {File} file 
-     * @returns {Promise<Array>} List of participants
      */
     async parseFile(file) {
         return new Promise((resolve, reject) => {
@@ -51,33 +75,61 @@ export class DataManager {
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
-                    
-                    // Assume first sheet
                     const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    
-                    // Convert to JSON
                     const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
                     
-                    // Parse rows (skip header if detected)
-                    // Simple heuristic: if row 0 has "name" (case insensitive), skip it
+                    // Header detection
+                    let headers = [];
                     let startIndex = 0;
-                    if (jsonData.length > 0 && typeof jsonData[0][0] === 'string' && jsonData[0][0].toLowerCase().includes('name')) {
-                        startIndex = 1;
+                    
+                    if (jsonData.length > 0) {
+                         // Check first row for "Name"
+                         const row0 = jsonData[0].map(c => String(c).toLowerCase());
+                         if(row0.includes('name')) {
+                             headers = row0;
+                             startIndex = 1;
+                         } else {
+                             // Default mapping: 0=Name, 1=Weight
+                             headers = ['name', 'weight', 'uid', 'supervisor', 'shift', 'tag'];
+                         }
                     }
+
+                    const findIdx = (key) => headers.indexOf(key);
 
                     const parsed = [];
                     for(let i = startIndex; i < jsonData.length; i++) {
                         const row = jsonData[i];
-                        if (row && row.length > 0 && row[0]) {
-                            parsed.push({
-                                name: String(row[0]).trim(),
-                                weight: row[1] ? Number(row[1]) : 1
-                            });
-                        }
+                        if (!row || row.length === 0) continue;
+                        
+                        // Map by header index or default position
+                        // Default fallback: Name=0, Weight=1, UID=2, Sup=3, Shift=4, Tag=5
+                        
+                        const val = (idx) => row[idx] ? String(row[idx]).trim() : "";
+                        
+                        // Helper to find value by header name OR default index
+                        const getVal = (key, defaultIdx) => {
+                             const hIdx = findIdx(key);
+                             if (hIdx !== -1) return val(hIdx);
+                             return val(defaultIdx);
+                        };
+                        
+                        const name = getVal('name', 0);
+                        if(!name) continue;
+
+                        parsed.push({
+                            id: Math.random().toString(36).substr(2, 9),
+                            name: name,
+                            weight: Number(getVal('weight', 1)) || 1,
+                            uid: getVal('uid', 2),
+                            supervisor: getVal('supervisor', 3),
+                            shift: getVal('shift', 4),
+                            tag: getVal('tag', 5)
+                        });
                     }
                     
                     if (parsed.length > 0) {
-                        this.participants = parsed;
+                        // Append to existing
+                        this.participants = [...this.participants, ...parsed];
                         resolve(parsed);
                     } else {
                         reject("No valid data found.");
