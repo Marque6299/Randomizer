@@ -72,38 +72,20 @@ export class AnimationEngine {
         this.isIdle = false;
         
         const startPos = this.position;
-        // Perfect Center calculation:
-        // We want the CENTER of the card (index + 0.5) to align with the CENTER of the track (0).
-        // So target pos = - (index + 0.5) * size + (viewportCenter?).
-        // Actually, CSS centers the track via transform.
-        // If track is at 0, card 0 left edge is at 0.
-        // We want Card X to be at 50% of screen.
-        // Let's assume Screen Width W. Marker at W/2.
-        // Card X Left = X * Size. Card X Center = X * Size + Size/2.
-        // We want to shift track so that (X*Size + Size/2) is at Marker (W/2).
-        // translateX = Marker - CardCenter.
-        // translateX = (W/2) - (X * Size + Size/2).
         
-        // HOWEVER, our current logic uses a simpler offset.
-        // Let's check constructor: this.itemSize = 280 + 20 = 300.
-        // Let's rely on visual calibration.
-        // If we subtract (index * itemSize), the LEFT edge of card is at LEFT edge of container.
-        // To center it:
-        // Container is centered? No, track is huge div.
-        // CSS: #picker-track { display: flex; align-items: center; padding-left: 50%; }
-        // If padding-left is 50%, then 0px translation puts Start of Card 0 at 50% (Center).
-        // So to center Card 0, we need to shift it LEFT by half its width.
-        // pos = - (Width/2).
-        // To center Card X:
-        // pos = - (X * Size) - (CardWidth/2).
+        // Dynamic Center Alignment
+        // TargetPos = (ViewportCenter) - (CardCenter)
+        const viewportCenter = window.innerWidth / 2;
+        const cardCenter = (targetIndex * this.itemSize) + (this.cardWidth / 2); // 280/2 = 140
         
-        // Since we have gap, it's (X * Size) + (CardWidth/2).
-        // Size = CardWidth + Gap.
-        // Let's approximate: 
-        // Target = - (targetIndex * this.itemSize) - (this.itemSize / 2) + (this.gap / 2);
-        // Easier: - (targetIndex * this.itemSize) - 140 (half card).
+        // We assume track is at x=0 implies left edge of Card 0 is at x=0?
+        // Actually `translateX` moves the whole container.
+        // If container is centered in screen via CSS margin/flex, things get complex.
+        // BUT `picker-track` is usually `position: relative` or absolute inside a container.
+        // Let's assume standard behavior: `transform` moves it relative to its original flow position.
+        // If original flow starts at left=0.
         
-        this.targetPosition = - (targetIndex * this.itemSize) - 130; // Fine tuned -130 for visual center
+        this.targetPosition = viewportCenter - cardCenter;
         
         this.startTime = null;
         this.duration = duration;
@@ -111,7 +93,6 @@ export class AnimationEngine {
         this.easing = theme; // Store theme to select algo
         
         cancelAnimationFrame(this.rafId);
-        this.animateSpin();
         
         const startTime = performance.now();
         

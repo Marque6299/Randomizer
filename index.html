@@ -110,6 +110,11 @@
           </div>
 
           <div class="setting-group">
+              <label>App Title</label>
+              <input type="text" id="app-title-input" class="text-input" placeholder="Premium Random Picker">
+          </div>
+          
+          <div class="setting-group">
               <label>Spin Duration: <span id="duration-value">15s</span></label>
               <input type="range" id="spin-duration" min="5" max="60" value="15" step="1" class="range-input">
           </div>
@@ -166,7 +171,7 @@
 
       <!-- History Modal -->
       <div id="modal-history" class="modal hidden">
-        <div class="modal-content glass-panel modal-lg">
+        <div class="modal-content glass-panel modal-md history-theme">
           <header class="modal-header">
             <h2>Spin History</h2>
             <div class="header-actions">
