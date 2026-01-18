@@ -403,55 +403,101 @@ class App {
     }
     
     showWinnerModal(prize) {
-        this.winnerNameDisplay.textContent = this.currentWinner.name;
-        
-        // Update prize badge
-        if(prize) {
-            this.winnerPrizeDisplay.textContent = `🎁 ${prize}`;
-        } else {
-            this.winnerPrizeDisplay.textContent = '🎉 CONGRATULATIONS!';
-        }
-        
-        const avatarContainer = document.getElementById('winner-avatar');
-        // Generate Avatar
+        // Redesigned Winner Modal (Card-in-Card)
         const p = this.currentWinner;
+        
+        // Generate Color
         const hash = p.name.split('').reduce((acc, char) => char.charCodeAt(0) + ((acc << 5) - acc), 0);
         const hue = Math.abs(hash % 360);
         const color = `hsl(${hue}, 70%, 65%)`;
-        avatarContainer.innerHTML = `
-            <div style="background: ${color}; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 50%; color: white;">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="12" cy="7" r="4"></circle>
-                </svg>
-            </div>
-        `;
 
-        this.winnerDetailsDisplay.innerHTML = `
-            <div class="winner-detail-item">
-                <span class="label">👤 ID Number</span>
-                <span class="value">${this.currentWinner.uid || 'N/A'}</span>
-            </div>
-            <div class="winner-detail-item">
-                <span class="label">🏢 Shift</span>
-                <span class="value">${this.currentWinner.shift || 'N/A'}</span>
-            </div>
-            <div class="winner-detail-item">
-                <span class="label">👔 Supervisor</span>
-                <span class="value">${this.currentWinner.supervisor || 'N/A'}</span>
-            </div>
-            <div class="winner-detail-item">
-                <span class="label">🏷️ Tag</span>
-                <span class="value">${this.currentWinner.tag || 'Participant'}</span>
+        this.modalWinner.innerHTML = `
+            <div class="modal-content winner-modal-content-reset">
+                <button class="close-icon-winner" id="btn-close-winner-dynamic">&times;</button>
+                
+                <div class="winner-celebration-banner">🏆 WINNER SELECTED! 🏆</div>
+
+                <div class="profile-card-main winner-edition">
+                     <div class="profile-card-header">
+                         <div class="profile-avatar-wrapper">
+                            <div class="profile-avatar winner-avatar-glow" style="background: ${color}">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </div>
+                         </div>
+                         <div class="profile-identity">
+                             <h2 class="profile-name winner-text-gold">${p.name}</h2>
+                             <div class="profile-role-badge winner-badge-gold">${p.tag || 'Winner'}</div>
+                         </div>
+                     </div>
+                     
+                     <div class="profile-grid">
+                        ${prize ? `
+                        <!-- Prize Card (Featured) -->
+                        <div class="info-card prize-card-gold">
+                            <div class="info-card-icon">
+                                <span style="font-size: 1.5rem;">🎁</span>
+                            </div>
+                            <div class="info-card-content">
+                                <span class="info-label">Current Prize</span>
+                                <span class="info-value text-gold">${prize}</span>
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        <!-- ID Card -->
+                        <div class="info-card">
+                            <div class="info-card-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                            </div>
+                            <div class="info-card-content">
+                                <span class="info-label">ID Number</span>
+                                <span class="info-value">${p.uid || 'N/A'}</span>
+                            </div>
+                        </div>
+
+                        <!-- Shift Card -->
+                        <div class="info-card">
+                            <div class="info-card-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            </div>
+                            <div class="info-card-content">
+                                <span class="info-label">Shift</span>
+                                <span class="info-value">${p.shift || 'N/A'}</span>
+                            </div>
+                        </div>
+
+                        <!-- Supervisor Card -->
+                        <div class="info-card">
+                            <div class="info-card-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                            </div>
+                            <div class="info-card-content">
+                                <span class="info-label">Supervisor</span>
+                                <span class="info-value">${p.supervisor || 'N/A'}</span>
+                            </div>
+                        </div>
+                     </div>
+                </div>
+                
+                <div class="confetti-rain" id="dynamic-confetti"></div>
             </div>
         `;
         
         this.modalWinner.classList.remove('hidden');
         
-        const container = document.getElementById('confetti-container');
-        container.innerHTML = '';
-        const colors = ['#6366f1', '#ec4899', '#06b6d4', '#f59e0b'];
-        for(let i=0; i<50; i++) {
+        // Re-bind Close Button
+        document.getElementById('btn-close-winner-dynamic').addEventListener('click', () => {
+             this.modalWinner.classList.add('hidden');
+             this.startIdleSequence();
+        });
+        
+        // Confetti
+        const container = document.getElementById('dynamic-confetti');
+        const colors = ['#fcd34d', '#fbbf24', '#f59e0b', '#ffffff']; // Gold theme
+        for(let i=0; i<80; i++) {
             const conf = document.createElement('div');
             conf.className = 'confetti-piece';
             conf.style.left = Math.random() * 100 + '%';

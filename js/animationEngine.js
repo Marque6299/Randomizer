@@ -103,6 +103,29 @@ export class AnimationEngine {
         this.isSpinning = true;
         this.isIdle = false;
         
+        // --- ACCURACY FIX ---
+        // Dynamically measure the actual rendered size of cards to ensure perfect alignment
+        // This accounts for any CSS scaling, responsive changes, or zoom levels
+        const firstCard = this.track.firstElementChild;
+        if (firstCard) {
+            const rect = firstCard.getBoundingClientRect();
+            // We need width in context of the track's coordinate system
+            // Simple offsetWidth is reliable if no transforms on children
+            this.cardWidth = firstCard.offsetWidth;
+            
+            // Measure gap (check 2nd card if exists)
+            const secondCard = firstCard.nextElementSibling;
+            if (secondCard) {
+                const rect2 = secondCard.getBoundingClientRect();
+                // Assumes horizontal layout
+                this.gap = secondCard.offsetLeft - (firstCard.offsetLeft + firstCard.offsetWidth);
+            }
+            
+            this.itemSize = this.cardWidth + this.gap;
+            console.log(`Dynamic Measurement: Card=${this.cardWidth}, Gap=${this.gap}, Item=${this.itemSize}`);
+        }
+        // ---------------------
+
         const startPos = this.position;
         
         // Dynamic Center Alignment
