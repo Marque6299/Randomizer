@@ -244,7 +244,7 @@ body {
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 3px;
-    background: linear-gradient(90deg, transparent, rgba(99,102,241,0.5), transparent);
+    background: linear-gradient(90deg, rgba(99,102,241,0.5));
     pointer-events: none;
 }
 
