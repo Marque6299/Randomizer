@@ -181,6 +181,9 @@ class App {
         document.querySelectorAll('.toggle-group .toggle-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         this.dataManager.setMode(mode);
+        // Refresh visuals immediately to reflect weights
+        this.randomizeAndRender();
+        this.animationEngine.resetIdleSpeed(); // Ensure speed is normal
     }
 
     async handleFileUpload(event) {
@@ -266,39 +269,59 @@ class App {
 
     // Animation Logic
     
-    startIdleSequence() {
-        // Clear queue so we start fresh (important if data changed)
-        this.idleQueue = [];
-        
+    randomizeAndRender() {
         const participants = this.dataManager.getParticipants();
         if (participants.length === 0) {
             this.track.innerHTML = '<div class="picker-card">Add Participants</div>';
             this.animationEngine.stopIdle();
             return;
         }
+
+        let visuals = [];
         
-        // Seamless Carousel Strategy
-        // We render ALL participants + a buffer at the end equal to visible cards (~15)
-        // The engine handles the loop by resetting position after scrolling "participants.length" items
-        
-        const bufferCount = 20; // Enough to fill screen width
-        const renderList = [...participants];
-        
-        // Append buffer (first N items repeated at end)
+        // VISUAL WEIGHTING LOGIC
+        // If in Weighted Mode, we duplicate cards to visually represent their higher chance.
+        // This makes the "Seamless Carousel" longer but fairer to the eye.
+        if (this.dataManager.mode === 'weighted') {
+            participants.forEach(p => {
+                const count = Math.max(1, p.weight || 1);
+                for(let i=0; i<count; i++) {
+                    visuals.push(p);
+                }
+            });
+        } else {
+            // Random Mode: Everyone once
+            visuals = [...participants];
+        }
+
+        // Shuffle the visual list
+        // We shuffle the display list so high-weight duplicates are scattered
+        visuals = PickerLogic.shuffle(visuals);
+
+        // BUFFERING
+        // Add buffer for seamless loop (first 20 items repeated at end)
+        const bufferCount = 20; 
+        const renderList = [...visuals];
         for(let i=0; i<bufferCount; i++) {
-            renderList.push(participants[i % participants.length]);
+            renderList.push(visuals[i % visuals.length]);
         }
         
+        // RENDER
         this.renderCardsToTrack(renderList, true);
         
-        // Update Engine with exact count of UNIQUE items for the loop threshold
-        this.animationEngine.setItemCount(participants.length);
+        // ENGINE UPDATE
+        // Important: Tell engine the UNIQUE length of our visual cycle (includes duplicates but not buffer)
+        this.animationEngine.setItemCount(visuals.length);
         
         this.animationEngine.resetPosition();
         this.animationEngine.isSpinning = false;
         this.animationEngine.isIdle = false;
-        
         this.animationEngine.startIdle();
+    }
+
+    startIdleSequence() {
+        // Just delegate to the new randomizer logic, which handles rendering & engine
+        this.randomizeAndRender();
     }
     
     handleIdleLoop() {
