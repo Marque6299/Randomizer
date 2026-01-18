@@ -602,7 +602,102 @@ class App {
         };
         closeBtn.addEventListener('click', close);
     }
-};
+
+    startParticipantSlideshow() {
+        const participants = this.dataManager.getParticipants();
+        if(participants.length === 0) {
+            alert("No participants to display!");
+            return;
+        }
+
+        const modal = document.getElementById('modal-participant-slideshow');
+        const display = document.getElementById('participant-slide-display');
+        modal.classList.remove('hidden');
+        
+        let index = 0;
+        
+        const showSlide = () => {
+             if (index >= participants.length) index = 0;
+             const p = participants[index];
+             
+             const hash = p.name.split('').reduce((acc, char) => char.charCodeAt(0) + ((acc << 5) - acc), 0);
+             const hue = Math.abs(hash % 360);
+             const color = `hsl(${hue}, 70%, 65%)`;
+
+             display.innerHTML = `
+                 <div class="participant-card-premium">
+                     <div class="participant-card-header">
+                         <div class="participant-avatar-xl" style="background: ${color}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                         </div>
+                         <h2 class="participant-card-name">${p.name}</h2>
+                         <div class="participant-card-role">${p.tag || 'Participant'}</div>
+                     </div>
+                     
+                     <div class="participant-card-body">
+                        <div class="participant-info-row">
+                            <span class="participant-info-icon">🆔</span>
+                            <div class="participant-info-content">
+                                <div class="participant-info-label">ID Number</div>
+                                <div class="participant-info-value">${p.uid || 'N/A'}</div>
+                            </div>
+                        </div>
+                        <div class="participant-info-row">
+                            <span class="participant-info-icon">🕐</span>
+                            <div class="participant-info-content">
+                                <div class="participant-info-label">Shift</div>
+                                <div class="participant-info-value">${p.shift || 'N/A'}</div>
+                            </div>
+                        </div>
+                        <div class="participant-info-row">
+                            <span class="participant-info-icon">👔</span>
+                            <div class="participant-info-content">
+                                <div class="participant-info-label">Supervisor</div>
+                                <div class="participant-info-value">${p.supervisor || 'N/A'}</div>
+                            </div>
+                        </div>
+                        ${this.dataManager.mode === 'weighted' && p.weight > 1 ? `
+                        <div class="participant-info-row">
+                            <span class="participant-info-icon">⚖️</span>
+                            <div class="participant-info-content">
+                                <div class="participant-info-label">Weight</div>
+                                <div class="participant-info-value">x${p.weight}</div>
+                            </div>
+                        </div>
+                        ` : ''}
+                     </div>
+                 </div>
+             `;
+             
+             display.classList.remove('animate');
+             const progress = document.getElementById('participant-slide-progress');
+             progress.style.transition = 'none';
+             progress.style.width = '0%';
+             
+             void display.offsetWidth;
+             
+             display.classList.add('animate');
+             progress.style.transition = 'width 5s linear';
+             progress.style.width = '100%';
+             
+             index++;
+        };
+        
+        showSlide();
+        this.participantSlideshowInterval = setInterval(showSlide, 5000);
+        
+        const closeBtn = document.getElementById('btn-close-participant-slideshow');
+        const close = () => {
+             clearInterval(this.participantSlideshowInterval);
+             modal.classList.add('hidden');
+             closeBtn.removeEventListener('click', close);
+        };
+        closeBtn.addEventListener('click', close);
+    }
+}
 
 // Start App
 document.addEventListener('DOMContentLoaded', () => {
