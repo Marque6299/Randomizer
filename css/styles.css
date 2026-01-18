@@ -245,7 +245,7 @@ body {
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 40%;
-    background: linear-gradient(to bottom, rgba(255,255,255,0.05), transparent);
+    background: #1e293b;
     pointer-events: none;
 }
 

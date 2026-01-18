@@ -39,31 +39,25 @@ export class AnimationEngine {
     _idleLoop() {
         if (!this.isIdle) return;
 
-        // Move position
+        // Move position (virtual infinite scroll)
         this.position -= this.idleSpeed;
         
-        // Optimization: Reset position to prevent extreme values
-        // When card is fully covered by left overlay (mask starts at 15% = ~150px on typical screen)
-        // We add extra buffer to ensure complete coverage before removal
-        const threshold = -(this.itemSize + 150); // Card width + overlay coverage
-        if (this.position <= threshold) {
-            // Remove the first child card from DOM (now fully hidden)
-            if (this.track.firstChild) {
-                this.track.removeChild(this.track.firstChild);
-            }
-            // Reset position by one item width
-            this.position += this.itemSize;
-            
-            // Notify to add a new card at the end
-            if(this.onCardExit) this.onCardExit();
+        // Modulo-based optimization: Reset position periodically to keep values bounded
+        // Every 10 cards (~3000px), we reset the transform but maintain visual continuity
+        const cycleThreshold = -(this.itemSize * 10);
+        if (this.position <= cycleThreshold) {
+            // Reset position by 10 card widths
+            this.position += this.itemSize * 10;
+            // Visual appearance stays identical due to repeating cards
         }
         
         this.track.style.transform = `translateX(${this.position}px)`;
 
-        // Check if we crossed a card boundary for sound effects
+        // Check if we crossed a card boundary - notify to add new card
         const index = Math.floor(Math.abs(this.position) / this.itemSize);
         if (index > this.lastIndex) {
              this.lastIndex = index;
+             if(this.onCardExit) this.onCardExit();
         }
 
         this.idleReqId = requestAnimationFrame(() => this._idleLoop());
