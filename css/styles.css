@@ -1390,8 +1390,8 @@ input:checked + .slider:before {
         0 0 50px rgba(245, 158, 11, 0.1);
     background: radial-gradient(circle at top right, rgba(245, 158, 11, 0.05), rgba(30,30,40,0.95));
     /* FIX: Force visibility for winner modal (bypasses the slide animation) */
-    transform: translateY(0);
-    opacity: 1;
+    transform: translateY(0) !important;
+    opacity: 1 !important;
     animation: winnerCardEntry 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
