@@ -33,6 +33,13 @@
           📜 History
         </button>
         <button
+          id="btn-display-participants"
+          class="nav-btn"
+          aria-label="Display Participants Slideshow"
+        >
+          👥 Display
+        </button>
+        <button
           id="btn-participants"
           class="nav-btn outline"
           aria-label="Manage Participants"
@@ -147,12 +154,6 @@
               </select>
           </div>
 
-          <div class="setting-group">
-              <button id="btn-display-participants" class="btn-primary" style="width: 100%;">
-                  📋 Display Participants
-              </button>
-          </div>
-
                <div class="setting-group row">
                   <label for="toggle-remove-winner">Remove Winner After Spin</label>
                   <label class="switch">
@@ -239,6 +240,28 @@
                   <div class="progress-bar"><div class="progress-fill" id="slide-progress"></div></div>
               </div>
           </div>
+      </div>
+
+      <!-- Participant Slideshow Modal -->
+      <div id="modal-participant-slideshow" class="modal hidden participant-slideshow-modal">
+        <div class="modal-content participant-slideshow-fullscreen">
+            <button class="close-overlay-alt" id="btn-close-participant-slideshow">&times;</button>
+            
+            <div class="participant-slideshow-header">
+                <div class="participant-slideshow-label">Participant Directory</div>
+                <h2 class="participant-slideshow-title">Meet the Team</h2>
+            </div>
+            
+            <div id="participant-slide-display" class="participant-slide-container">
+                <!-- Card content injected here -->
+            </div>
+            
+            <div class="participant-slideshow-footer">
+                <div class="participant-progress-bar">
+                    <div id="participant-slide-progress" class="participant-progress-fill"></div>
+                </div>
+            </div>
+        </div>
       </div>
 
       <!-- Watermark -->
