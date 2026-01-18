@@ -41,6 +41,7 @@ class App {
         // State
         this.winnerIndexKey = 60; // Target index for winning card
         this.currentTheme = 'standard';
+        this.idleQueue = []; // Queue for idle scroll cycling
         
         this.init();
     }
@@ -266,6 +267,9 @@ class App {
     // Animation Logic
     
     startIdleSequence() {
+        // Clear queue so we start fresh (important if data changed)
+        this.idleQueue = [];
+        
         const participants = this.dataManager.getParticipants();
         if (participants.length === 0) {
             this.track.innerHTML = '<div class="picker-card">Add Participants</div>';
@@ -292,8 +296,15 @@ class App {
          const participants = this.dataManager.getParticipants();
          if (!participants.length) return;
          
-         // Add random participant
-         const p = participants[Math.floor(Math.random() * participants.length)];
+         // Refill queue if empty
+         if (this.idleQueue.length === 0) {
+             // Shuffle a new batch so we cycle through everyone before repeating
+             this.idleQueue = PickerLogic.shuffle([...participants]);
+         }
+         
+         // Pop from queue
+         const p = this.idleQueue.pop();
+         
          const div = this.createCardElement(p);
          this.track.appendChild(div);
     }
@@ -604,6 +615,8 @@ class App {
     }
 
     startParticipantSlideshow() {
+        if (this.participantSlideshowInterval) clearInterval(this.participantSlideshowInterval);
+        
         const participants = this.dataManager.getParticipants();
         if(participants.length === 0) {
             alert("No participants to display!");
@@ -612,7 +625,16 @@ class App {
 
         const modal = document.getElementById('modal-participant-slideshow');
         const display = document.getElementById('participant-slide-display');
+        
+        if(!modal || !display) {
+            console.error("Critical: Participant Slideshow elements missing in DOM.");
+            return;
+        }
+
         modal.classList.remove('hidden');
+        
+        // Force Reflow
+        void modal.offsetWidth;
         
         let index = 0;
         
@@ -625,46 +647,65 @@ class App {
              const color = `hsl(${hue}, 70%, 65%)`;
 
              display.innerHTML = `
-                 <div class="participant-card-premium">
-                     <div class="participant-card-header">
-                         <div class="participant-avatar-xl" style="background: ${color}">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                <circle cx="12" cy="7" r="4"></circle>
-                            </svg>
+                 <div class="profile-card-main">
+                     <div class="profile-card-header">
+                         <div class="profile-avatar-wrapper">
+                            <div class="profile-avatar" style="background: ${color}">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </div>
                          </div>
-                         <h2 class="participant-card-name">${p.name}</h2>
-                         <div class="participant-card-role">${p.tag || 'Participant'}</div>
+                         <div class="profile-identity">
+                             <h2 class="profile-name">${p.name}</h2>
+                             <div class="profile-role-badge">${p.tag || 'Participant'}</div>
+                         </div>
                      </div>
                      
-                     <div class="participant-card-body">
-                        <div class="participant-info-row">
-                            <span class="participant-info-icon">🆔</span>
-                            <div class="participant-info-content">
-                                <div class="participant-info-label">ID Number</div>
-                                <div class="participant-info-value">${p.uid || 'N/A'}</div>
+                     <div class="profile-grid">
+                        <!-- ID Card -->
+                        <div class="info-card">
+                            <div class="info-card-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                            </div>
+                            <div class="info-card-content">
+                                <span class="info-label">ID Number</span>
+                                <span class="info-value">${p.uid || 'N/A'}</span>
                             </div>
                         </div>
-                        <div class="participant-info-row">
-                            <span class="participant-info-icon">🕐</span>
-                            <div class="participant-info-content">
-                                <div class="participant-info-label">Shift</div>
-                                <div class="participant-info-value">${p.shift || 'N/A'}</div>
+
+                        <!-- Shift Card -->
+                        <div class="info-card">
+                            <div class="info-card-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            </div>
+                            <div class="info-card-content">
+                                <span class="info-label">Shift</span>
+                                <span class="info-value">${p.shift || 'N/A'}</span>
                             </div>
                         </div>
-                        <div class="participant-info-row">
-                            <span class="participant-info-icon">👔</span>
-                            <div class="participant-info-content">
-                                <div class="participant-info-label">Supervisor</div>
-                                <div class="participant-info-value">${p.supervisor || 'N/A'}</div>
+
+                        <!-- Supervisor Card -->
+                        <div class="info-card">
+                            <div class="info-card-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                            </div>
+                            <div class="info-card-content">
+                                <span class="info-label">Supervisor</span>
+                                <span class="info-value">${p.supervisor || 'N/A'}</span>
                             </div>
                         </div>
+
                         ${this.dataManager.mode === 'weighted' && p.weight > 1 ? `
-                        <div class="participant-info-row">
-                            <span class="participant-info-icon">⚖️</span>
-                            <div class="participant-info-content">
-                                <div class="participant-info-label">Weight</div>
-                                <div class="participant-info-value">x${p.weight}</div>
+                        <!-- Weight Card -->
+                        <div class="info-card highlight">
+                            <div class="info-card-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20v-6M6 20V10M18 20V4"></path></svg>
+                            </div>
+                            <div class="info-card-content">
+                                <span class="info-label">Entries</span>
+                                <span class="info-value">${p.weight}x</span>
                             </div>
                         </div>
                         ` : ''}
