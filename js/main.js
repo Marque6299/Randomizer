@@ -269,17 +269,24 @@ class App {
             return;
         }
         
+        // Shuffle participants for variety, then display all in sequence
+        const shuffled = [...participants].sort(() => Math.random() - 0.5);
+        
+        // Create initial buffer (30 cards to fill the screen)
         const buffer = [];
         for(let i=0; i<30; i++) {
-             buffer.push(participants[i % participants.length]);
+            buffer.push(shuffled[i % shuffled.length]);
         }
         
         this.renderCardsToTrack(buffer, true);
-        this.currentTrackData = buffer;
         
-        this.animationEngine.resetPosition(); // Fix: Reset offset 
-        this.animationEngine.isSpinning = false; // Force reset state
-        this.animationEngine.isIdle = false; // Force reset state to allow start
+        // Store shuffled order and index for sequential display
+        this.idleParticipantPool = shuffled;
+        this.idleCurrentIndex = 30 % shuffled.length; // Start where buffer ended
+        
+        this.animationEngine.resetPosition();
+        this.animationEngine.isSpinning = false;
+        this.animationEngine.isIdle = false;
         
         this.animationEngine.startIdle();
     }
@@ -288,9 +295,20 @@ class App {
          const participants = this.dataManager.getParticipants();
          if (!participants.length) return;
          
-         const p = participants[Math.floor(Math.random() * participants.length)];
+         // Add next participant in sequence from the shuffled pool
+         const p = this.idleParticipantPool[this.idleCurrentIndex];
          const div = this.createCardElement(p);
          this.track.appendChild(div);
+         
+         // Move to next participant
+         this.idleCurrentIndex++;
+         
+         // When we've shown everyone, reshuffle and start over
+         if (this.idleCurrentIndex >= this.idleParticipantPool.length) {
+             // Reshuffle for next cycle
+             this.idleParticipantPool = [...participants].sort(() => Math.random() - 0.5);
+             this.idleCurrentIndex = 0;
+         }
     }
     
     spin() {
