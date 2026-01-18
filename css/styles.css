@@ -213,85 +213,93 @@ body {
   will-change: transform;
 }
 
-/* Card Styles */
+/* Card Styles - Premium Redesign */
 .picker-card {
   min-width: var(--card-width);
-  height: 280px; /* Increased height from 220px */
-  background: linear-gradient(
-    180deg,
-    rgba(30, 41, 59, 0.95),
-    rgba(15, 23, 42, 0.98)
-  );
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 16px;
+  height: 280px;
+  background: #1e293b; /* Solid dark background */
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justify-content: center;
   align-items: center;
   color: var(--text-primary);
   text-align: center;
   padding: 1.5rem 1rem;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255,255,255,0.05) inset;
   user-select: none;
   position: relative;
-  gap: 0.8rem;
+  gap: 0.75rem;
   transform-style: preserve-3d;
   overflow: hidden;
+  transition: transform 0.2s ease;
 }
 
-/* Glass shine effect */
+/* Top accent bar */
 .picker-card::before {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
-    height: 40%;
-    background: #1e293b;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, rgba(99,102,241,0.5), transparent);
     pointer-events: none;
 }
 
 .card-avatar {
-    width: 60px;
-    height: 60px; /* Reduced from 80px */
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
-    box-shadow: 0 0 20px rgba(0,0,0,0.3);
-    border: 2px solid rgba(255,255,255,0.2);
-    margin-bottom: 0.2rem;
+    box-shadow: 
+        0 8px 20px rgba(0,0,0,0.3),
+        0 0 0 3px rgba(255,255,255,0.1);
+    border: none;
+    margin-bottom: 0.5rem;
+    transition: transform 0.3s ease;
+}
+
+.picker-card:hover .card-avatar {
+    transform: scale(1.05);
 }
 
 .card-avatar svg {
-    width: 32px;
-    height: 32px;
-    color: rgba(255,255,255,0.9);
+    width: 40px;
+    height: 40px;
+    color: rgba(255,255,255,0.95);
 }
 
 .card-content {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.3rem;
+    gap: 0.4rem;
     width: 100%;
+    flex: 1;
 }
 
 .card-name {
-    font-size: 1.3rem;
-    font-weight: 700;
+    font-size: 1.4rem;
+    font-weight: 800;
     color: white;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 100%;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    letter-spacing: -0.01em;
 }
 
 .card-role {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
+    font-size: 0.75rem;
+    color: #94a3b8;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-weight: 600;
+    letter-spacing: 0.1em;
+    font-weight: 700;
 }
 
 .card-details {
@@ -303,24 +311,21 @@ body {
 }
 
 .detail-pill {
-    font-size: 0.75rem;
-    background: rgba(255,255,255,0.08); /* Frosted */
-    padding: 3px 8px;
+    font-size: 0.7rem;
+    background: rgba(99,102,241,0.15);
+    padding: 4px 10px;
     border-radius: 12px;
-    color: #cbd5e1;
-    border: 1px solid rgba(255,255,255,0.05);
+    color: #e2e8f0;
+    border: 1px solid rgba(99,102,241,0.2);
+    font-weight: 600;
 }
 
 .picker-card.winner-highlight {
-  background: linear-gradient(
-    145deg,
-    var(--accent-primary),
-    #4338ca
-  );
+  background: linear-gradient(145deg, var(--accent-primary), #4338ca);
   box-shadow: 0 0 40px rgba(99, 102, 241, 0.6);
   border: 2px solid rgba(255, 255, 255, 0.8);
   z-index: 10;
-  transform: scale(1.05); /* Slight pop */
+  transform: scale(1.05);
 }
 
 .card-weight {
