@@ -48,7 +48,9 @@ export class AnimationEngine {
         if (this.position <= cycleThreshold) {
             // Reset position by 10 card widths
             this.position += this.itemSize * 10;
-            // Visual appearance stays identical due to repeating cards
+            // CRITICAL FIX: Reset lastIndex to prevent exit detection from breaking
+            // When position cycles, index jumps from high to low, so we must reset the tracker
+            this.lastIndex = 0;
         }
         
         this.track.style.transform = `translateX(${this.position}px)`;
