@@ -282,9 +282,12 @@
           </header>
           <div class="modal-body">
             <div class="upload-area small" id="drop-zone">
-              <p>Drag & Drop Excel/CSV to Append</p>
+              <span class="upload-icon">📂</span>
+              <div>
+                  <p style="margin-bottom: 0.5rem; font-weight: 600;">Drag & Drop Excel/CSV to Append</p>
+                  <button class="btn-micro" onclick="document.getElementById('file-upload').click()">Browse Files</button>
+              </div>
                <input type="file" id="file-upload" accept=".cSv, .xlsx, .xls" hidden />
-               <button class="btn-micro" onclick="document.getElementById('file-upload').click()">Browse</button>
             </div>
 
             <div class="data-toolbar">

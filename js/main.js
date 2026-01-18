@@ -132,7 +132,7 @@ class App {
         const titleInput = document.getElementById('app-title-input');
         titleInput.addEventListener('input', (e) => {
             const val = e.target.value;
-            document.querySelector('.navbar-brand').textContent = val || 'Premium Random Picker';
+            // document.querySelector('.navbar-brand').textContent = val || 'Premium Random Picker'; // REMOVED: Destroys logo
             document.getElementById('app-title-display').textContent = val || 'Premium Random Picker';
             document.title = val || 'Premium Random Picker';
         });
