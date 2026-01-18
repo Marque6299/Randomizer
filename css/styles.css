@@ -604,7 +604,7 @@ input:checked + .slider:before {
 }
 
 
-/* Premium Winner Modal 2.0 */
+/* Premium Winner Modal 2.0 - Solid Background */
 .winner-modal-premium .modal-content {
     background: transparent;
     box-shadow: none;
@@ -613,9 +613,12 @@ input:checked + .slider:before {
 }
 
 .winner-card {
-    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+    background: #1e293b; /* Solid dark background */
     border: 1px solid rgba(245, 158, 11, 0.3);
-    box-shadow: 0 30px 60px rgba(0,0,0,0.8), 0 0 100px rgba(245, 158, 11, 0.15);
+    box-shadow: 
+        0 30px 60px rgba(0,0,0,0.8), 
+        0 0 100px rgba(245, 158, 11, 0.15),
+        0 0 0 1px rgba(255,255,255,0.05) inset;
     border-radius: 32px;
     max-width: 550px;
     overflow: hidden;
@@ -726,7 +729,7 @@ input:checked + .slider:before {
 .winner-prize-badge {
     margin: 0 2rem 2rem;
     padding: 1rem 2rem;
-    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.05));
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1));
     border: 1px solid rgba(34, 197, 94, 0.3);
     border-radius: 50px;
     text-align: center;
@@ -752,7 +755,7 @@ input:checked + .slider:before {
     justify-content: center;
     border-right: 1px solid rgba(255,255,255,0.05);
     border-bottom: 1px solid rgba(255,255,255,0.05);
-    background: rgba(255,255,255,0.02);
+    background: rgba(0,0,0,0.2); /* Slightly darker for contrast */
     transition: background 0.2s ease;
 }
 

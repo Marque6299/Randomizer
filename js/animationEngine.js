@@ -53,8 +53,10 @@ export class AnimationEngine {
         
         this.track.style.transform = `translateX(${this.position}px)`;
 
-        // Check if we crossed a card boundary - notify to add new card
-        const index = Math.floor(Math.abs(this.position) / this.itemSize);
+        // Check if card has fully exited left overlay (mask starts at 15% = ~200px buffer)
+        // Add extra margin to ensure complete clearance beyond the overlay fade
+        const exitThreshold = this.itemSize + 250; // Card width + overlay buffer
+        const index = Math.floor(Math.abs(this.position) / exitThreshold);
         if (index > this.lastIndex) {
              this.lastIndex = index;
              if(this.onCardExit) this.onCardExit();
