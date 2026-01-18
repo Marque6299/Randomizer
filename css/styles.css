@@ -1262,7 +1262,13 @@ input:checked + .slider:before {
 .participant-slideshow-modal .modal-content {
     background: transparent;
     padding: 0;
-    max-width: 100%;
+    max-width: none;
+    width: 100vw;
+    height: 100vh;
+    max-height: none;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
 }
 
 .participant-slideshow-fullscreen {
@@ -1275,6 +1281,8 @@ input:checked + .slider:before {
     justify-content: center;
     z-index: 2000;
     padding: 2rem;
+    width: 100vw;
+    height: 100vh;
 }
 
 .close-overlay-alt {

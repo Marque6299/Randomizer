@@ -277,13 +277,22 @@ class App {
             return;
         }
         
-        // Create initial buffer (30 cards)
-        const buffer = [];
-        for(let i=0; i<30; i++) {
-            buffer.push(participants[i % participants.length]);
+        // Seamless Carousel Strategy
+        // We render ALL participants + a buffer at the end equal to visible cards (~15)
+        // The engine handles the loop by resetting position after scrolling "participants.length" items
+        
+        const bufferCount = 20; // Enough to fill screen width
+        const renderList = [...participants];
+        
+        // Append buffer (first N items repeated at end)
+        for(let i=0; i<bufferCount; i++) {
+            renderList.push(participants[i % participants.length]);
         }
         
-        this.renderCardsToTrack(buffer, true);
+        this.renderCardsToTrack(renderList, true);
+        
+        // Update Engine with exact count of UNIQUE items for the loop threshold
+        this.animationEngine.setItemCount(participants.length);
         
         this.animationEngine.resetPosition();
         this.animationEngine.isSpinning = false;
@@ -293,20 +302,9 @@ class App {
     }
     
     handleIdleLoop() {
-         const participants = this.dataManager.getParticipants();
-         if (!participants.length) return;
-         
-         // Refill queue if empty
-         if (this.idleQueue.length === 0) {
-             // Shuffle a new batch so we cycle through everyone before repeating
-             this.idleQueue = PickerLogic.shuffle([...participants]);
-         }
-         
-         // Pop from queue
-         const p = this.idleQueue.pop();
-         
-         const div = this.createCardElement(p);
-         this.track.appendChild(div);
+         // No-op for Seamless Carousel Mode
+         // The engine handles the loop math internally now.
+         return;
     }
     
     spin() {

@@ -22,6 +22,11 @@ export class AnimationEngine {
         this.onCardExit = null; // Callback when a card leaves the left side (for infinite loop)
         
         this.lastIndex = 0;
+        this.totalItems = 20; // Default buffer
+    }
+
+    setItemCount(count) {
+        this.totalItems = count;
     }
 
     startIdle() {
@@ -43,25 +48,29 @@ export class AnimationEngine {
         this.position -= this.idleSpeed;
         
         // Modulo-based optimization: Reset position periodically to keep values bounded
-        // Every 10 cards (~3000px), we reset the transform but maintain visual continuity
-        const cycleThreshold = -(this.itemSize * 10);
+        // We reset after scrolling exactly one full set of unique items
+        const cycleThreshold = -(this.itemSize * this.totalItems);
+        
         if (this.position <= cycleThreshold) {
-            // Reset position by 10 card widths
-            this.position += this.itemSize * 10;
+            // Reset position. We add exactly one full cycle length to jump back to "start"
+            // Visual continuity is maintained by the buffer cards at the end
+            this.position += (this.itemSize * this.totalItems);
+            
             // CRITICAL FIX: Reset lastIndex to prevent exit detection from breaking
-            // When position cycles, index jumps from high to low, so we must reset the tracker
             this.lastIndex = 0;
         }
         
         this.track.style.transform = `translateX(${this.position}px)`;
 
-        // Check if card has fully exited left overlay (mask starts at 15% = ~200px buffer)
-        // Add extra margin to ensure complete clearance beyond the overlay fade
-        const exitThreshold = this.itemSize + 250; // Card width + overlay buffer
-        const index = Math.floor(Math.abs(this.position) / exitThreshold);
-        if (index > this.lastIndex) {
-             this.lastIndex = index;
-             if(this.onCardExit) this.onCardExit();
+        // Sound Tick Check
+        // Calculate abstract index for sound tick (just modulo visual wrap)
+        const visiblePixel = Math.abs(this.position);
+        const currentIndex = Math.floor(visiblePixel / this.itemSize);
+        
+        if (currentIndex > this.lastIndex) {
+             this.lastIndex = currentIndex;
+             // Optional: Add tick sound on idle?
+             // if (this.onTick) this.onTick(); 
         }
 
         this.idleReqId = requestAnimationFrame(() => this._idleLoop());
