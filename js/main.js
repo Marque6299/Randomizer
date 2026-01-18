@@ -282,7 +282,9 @@ class App {
         
         // Store shuffled order and index for sequential display
         this.idleParticipantPool = shuffled;
-        this.idleCurrentIndex = 30 % shuffled.length; // Start where buffer ended
+        // Start from 0 - initial buffer doesn't count toward the sequential cycle
+        this.idleCurrentIndex = 0;
+        this.idleCardsShown = 0; // Track how many unique participants shown
         
         this.animationEngine.resetPosition();
         this.animationEngine.isSpinning = false;
@@ -302,12 +304,19 @@ class App {
          
          // Move to next participant
          this.idleCurrentIndex++;
+         this.idleCardsShown++;
          
-         // When we've shown everyone, reshuffle and start over
+         // When we've shown ALL participants once, reshuffle and start over
          if (this.idleCurrentIndex >= this.idleParticipantPool.length) {
+             this.idleCurrentIndex = 0; // Loop within current shuffle
+         }
+         
+         // Only reshuffle after showing each participant at least once
+         if (this.idleCardsShown >= this.idleParticipantPool.length) {
              // Reshuffle for next cycle
              this.idleParticipantPool = [...participants].sort(() => Math.random() - 0.5);
              this.idleCurrentIndex = 0;
+             this.idleCardsShown = 0;
          }
     }
     
