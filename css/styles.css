@@ -261,6 +261,8 @@ body {
     border: none;
     margin-bottom: 0.5rem;
     transition: transform 0.3s ease;
+    position: relative;
+    z-index: 2; /* Above ::before */
 }
 
 .picker-card:hover .card-avatar {
@@ -280,6 +282,8 @@ body {
     gap: 0.4rem;
     width: 100%;
     flex: 1;
+    position: relative;
+    z-index: 2; /* Above ::before */
 }
 
 .card-name {
