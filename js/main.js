@@ -419,7 +419,7 @@ class App {
                 <span class="value">${this.currentWinner.uid || 'N/A'}</span>
             </div>
             <div class="winner-detail-item">
-                <span class="label">🏢 Department</span>
+                <span class="label">🏢 Shift</span>
                 <span class="value">${this.currentWinner.shift || 'N/A'}</span>
             </div>
             <div class="winner-detail-item">
@@ -427,7 +427,7 @@ class App {
                 <span class="value">${this.currentWinner.supervisor || 'N/A'}</span>
             </div>
             <div class="winner-detail-item">
-                <span class="label">🏷️ Role</span>
+                <span class="label">🏷️ Tag</span>
                 <span class="value">${this.currentWinner.tag || 'Participant'}</span>
             </div>
         `;
