@@ -170,6 +170,10 @@ class App {
         document.getElementById('btn-slideshow').addEventListener('click', () => {
              this.startSlideshow();
         });
+        
+        document.getElementById('btn-display-participants').addEventListener('click', () => {
+             this.startParticipantSlideshow();
+        });
     }
     
     setMode(mode, btn) {
@@ -269,22 +273,13 @@ class App {
             return;
         }
         
-        // Shuffle participants for variety, then display all in sequence
-        const shuffled = [...participants].sort(() => Math.random() - 0.5);
-        
-        // Create initial buffer (30 cards to fill the screen)
+        // Create initial buffer (30 cards)
         const buffer = [];
         for(let i=0; i<30; i++) {
-            buffer.push(shuffled[i % shuffled.length]);
+            buffer.push(participants[i % participants.length]);
         }
         
         this.renderCardsToTrack(buffer, true);
-        
-        // Store shuffled order and index for sequential display
-        this.idleParticipantPool = shuffled;
-        // Start from 0 - initial buffer doesn't count toward the sequential cycle
-        this.idleCurrentIndex = 0;
-        this.idleCardsShown = 0; // Track how many unique participants shown
         
         this.animationEngine.resetPosition();
         this.animationEngine.isSpinning = false;
@@ -297,27 +292,10 @@ class App {
          const participants = this.dataManager.getParticipants();
          if (!participants.length) return;
          
-         // Add next participant in sequence from the shuffled pool
-         const p = this.idleParticipantPool[this.idleCurrentIndex];
+         // Add random participant
+         const p = participants[Math.floor(Math.random() * participants.length)];
          const div = this.createCardElement(p);
          this.track.appendChild(div);
-         
-         // Move to next participant
-         this.idleCurrentIndex++;
-         this.idleCardsShown++;
-         
-         // When we've shown ALL participants once, reshuffle and start over
-         if (this.idleCurrentIndex >= this.idleParticipantPool.length) {
-             this.idleCurrentIndex = 0; // Loop within current shuffle
-         }
-         
-         // Only reshuffle after showing each participant at least once
-         if (this.idleCardsShown >= this.idleParticipantPool.length) {
-             // Reshuffle for next cycle
-             this.idleParticipantPool = [...participants].sort(() => Math.random() - 0.5);
-             this.idleCurrentIndex = 0;
-             this.idleCardsShown = 0;
-         }
     }
     
     spin() {
@@ -593,6 +571,89 @@ class App {
                      <div class="slide-meta-item">
                         <span class="slide-meta-label">Role</span>
                         <span class="slide-meta-value">${w.tag || '-'}</span>
+                    </div>
+                 </div>
+             `;
+             
+             // Trigger re-flow for animation
+             display.classList.remove('animate');
+             const progress = document.getElementById('slide-progress');
+             progress.style.transition = 'none';
+             progress.style.width = '0%';
+             
+             void display.offsetWidth; // Force Reflow
+             
+             display.classList.add('animate');
+             progress.style.transition = 'width 5s linear';
+             progress.style.width = '100%';
+             
+             index++;
+        };
+        
+        showSlide();
+        this.slideshowInterval = setInterval(showSlide, 5000);
+        
+        // Close handler
+        const closeBtn = document.getElementById('btn-close-slideshow');
+        const close = () => {
+             clearInterval(this.slideshowInterval);
+             modal.classList.add('hidden');
+             closeBtn.removeEventListener('click', close);
+        };
+        closeBtn.addEventListener('click', close);
+    }
+    
+    startParticipantSlideshow() {
+        const participants = this.dataManager.getParticipants();
+        if(participants.length === 0) {
+            alert("No participants to show!");
+            return;
+        }
+
+        const modal = document.getElementById('modal-slideshow');
+        const display = document.getElementById('slide-display');
+        modal.classList.remove('hidden');
+        
+        // Start loop
+        let index = 0;
+        
+        const showSlide = () => {
+             if (index >= participants.length) index = 0;
+             const p = participants[index];
+             
+             // Generate color/avatar
+             const hash = p.name.split('').reduce((acc, char) => char.charCodeAt(0) + ((acc << 5) - acc), 0);
+             const hue = Math.abs(hash % 360);
+             const color = `hsl(${hue}, 70%, 65%)`;
+
+             display.innerHTML = `
+                 <div class="slide-hero">
+                     <div class="slide-avatar-large" style="background: ${color}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 50%; height: 50%; color: white;">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                     </div>
+                     <div class="slide-name-large">${p.name}</div>
+                     <div class="slide-prize-large">${p.tag || 'Participant'}</div>
+                 </div>
+                 
+                 <div class="slide-meta-grid">
+                    <div class="slide-meta-item">
+                        <span class="slide-meta-label">ID Number</span>
+                        <span class="slide-meta-value">${p.uid || '-'}</span>
+                    </div>
+                    <div class="slide-meta-item">
+                        <span class="slide-meta-label">Shift</span>
+                        <span class="slide-meta-value">${p.shift || '-'}</span>
+                    </div>
+                    <div class="slide-meta-item">
+                        <span class="slide-meta-label">Supervisor</span>
+                        <span class="slide-meta-value">${p.supervisor || '-'}</span>
+                    </div>
+                     <div class="slide-meta-item">
+                        <span class="slide-meta-label">Weight</span>
+                        <span class="slide-meta-value">${p.weight || '1'}</span>
                     </div>
                  </div>
              `;
